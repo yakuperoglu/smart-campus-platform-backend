@@ -1,0 +1,51 @@
+# Backend .dockerignore
+
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Test files
+tests
+*.test.js
+coverage
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+
+# Build files
+dist
+build
+
+# Uploads (will be created at runtime)
+uploads/*
+!uploads/.gitkeep
