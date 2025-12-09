@@ -24,47 +24,21 @@ const PORT = process.env.PORT || 3000;
 // MIDDLEWARE
 // ============================================
 
-// Security middleware
-app.use(helmet());
-
-// CORS configuration - Allow all Vercel and localhost origins
-const corsOptions = {
-  origin: function (origin, callback) {
-    console.log('🔍 CORS Request from origin:', origin);
-    
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) {
-      console.log('✅ CORS: Allowed (no origin)');
-      return callback(null, true);
-    }
-    
-    // Allow localhost for development
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      console.log('✅ CORS: Allowed (localhost)');
-      return callback(null, true);
-    }
-    
-    // Allow all Vercel deployments
-    if (origin.includes('.vercel.app')) {
-      console.log('✅ CORS: Allowed (Vercel)');
-      return callback(null, true);
-    }
-    
-    // Allow specific frontend URL from environment
-    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
-      console.log('✅ CORS: Allowed (FRONTEND_URL)');
-      return callback(null, true);
-    }
-    
-    console.log('❌ CORS: Blocked -', origin);
-    callback(new Error('Not allowed by CORS'));
-  },
+// CORS configuration - MUST BE BEFORE helmet() and other middleware
+app.use(cors({
+  origin: true, // Allow all origins for now
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
+}));
+
+// Security middleware - AFTER CORS
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
@@ -84,6 +58,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // ROUTES
 // ============================================
 
+// Handle preflight requests for all routes
+app.options('*', cors());
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -92,6 +69,16 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     status: 'running',
     documentation: '/api-docs',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// CORS test endpoint
+app.get('/cors-test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'CORS is working!',
+    origin: req.headers.origin || 'No origin header',
     timestamp: new Date().toISOString()
   });
 });
