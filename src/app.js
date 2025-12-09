@@ -9,6 +9,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 
 const { sequelize } = require('./models');
 const apiRoutes = require('./routes');
@@ -58,9 +60,16 @@ app.get('/', (req, res) => {
     message: 'Smart Campus Platform API',
     version: '1.0.0',
     status: 'running',
+    documentation: '/api-docs',
     timestamp: new Date().toISOString()
   });
 });
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Smart Campus API Documentation'
+}));
 
 // Mount API routes at /api/v1
 app.use('/api/v1', apiRoutes);

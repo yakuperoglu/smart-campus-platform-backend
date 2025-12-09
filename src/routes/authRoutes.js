@@ -28,23 +28,161 @@ const {
 } = require('../validators/authValidators');
 
 /**
- * @route   POST /api/v1/auth/register
- * @desc    Register a new user (student or faculty)
- * @access  Public
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Create a new user account (student or faculty) with role-specific profile
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - role
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: student@smartcampus.edu
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *                 example: SecurePass123!
+ *                 description: Must contain uppercase, lowercase, number, and special character
+ *               role:
+ *                 type: string
+ *                 enum: [student, faculty, staff]
+ *                 example: student
+ *               student_number:
+ *                 type: string
+ *                 example: "20240001"
+ *                 description: Required for students
+ *               department_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Required for students and faculty
+ *               employee_number:
+ *                 type: string
+ *                 example: FAC001
+ *                 description: Required for faculty
+ *               title:
+ *                 type: string
+ *                 example: Prof. Dr.
+ *                 description: Optional for faculty
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Registration successful. Please check your email to verify your account.
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  */
 router.post('/register', validate(registerSchema), register);
 
 /**
- * @route   POST /api/v1/auth/verify-email
- * @desc    Verify user email with token
- * @access  Public
+ * @swagger
+ * /auth/verify-email:
+ *   post:
+ *     summary: Verify email address
+ *     description: Verify user email using token sent via email
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: abc123def456...
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or expired token
  */
 router.post('/verify-email', validate(verifyEmailSchema), verifyEmail);
 
 /**
- * @route   POST /api/v1/auth/login
- * @desc    Login user and return tokens
- * @access  Public
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     description: Authenticate user and receive JWT tokens
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: student@smartcampus.edu
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: SecurePass123!
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       allOf:
+ *                         - $ref: '#/components/schemas/User'
+ *                         - type: object
+ *                           properties:
+ *                             profile:
+ *                               oneOf:
+ *                                 - $ref: '#/components/schemas/StudentProfile'
+ *                                 - $ref: '#/components/schemas/FacultyProfile'
+ *                     tokens:
+ *                       $ref: '#/components/schemas/Tokens'
+ *       401:
+ *         description: Invalid credentials
+ *       403:
+ *         description: Email not verified
  */
 router.post('/login', validate(loginSchema), login);
 
