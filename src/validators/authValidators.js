@@ -46,11 +46,10 @@ const registerSchema = {
     
     department_id: Joi.when('role', {
       is: Joi.valid('student', 'faculty'),
-      then: Joi.string().uuid().required().messages({
-        'string.guid': 'Department ID must be a valid UUID',
-        'any.required': 'Department ID is required'
+      then: Joi.string().uuid().optional().allow('', null).messages({
+        'string.guid': 'Department ID must be a valid UUID'
       }),
-      otherwise: Joi.string().uuid().optional()
+      otherwise: Joi.string().uuid().optional().allow('', null)
     }),
     
     // Faculty-specific fields

@@ -106,13 +106,13 @@ async function seedDatabase() {
         user_id: studentUser.id,
         student_number: `2024${String(i).padStart(4, '0')}`,
         department_id: departments[i % departments.length].id,
-        gpa: (2.5 + Math.random() * 1.5).toFixed(2),
-        cgpa: (2.5 + Math.random() * 1.5).toFixed(2)
+        gpa: parseFloat((2.5 + Math.random() * 1.5).toFixed(2)),
+        cgpa: parseFloat((2.5 + Math.random() * 1.5).toFixed(2))
       });
       
       await Wallet.create({ 
         user_id: studentUser.id, 
-        balance: (50 + Math.random() * 200).toFixed(2) 
+        balance: parseFloat((50 + Math.random() * 200).toFixed(2))
       });
     }
     console.log('✅ Created 5 student users (student1-5@smartcampus.edu / student123)');

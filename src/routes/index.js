@@ -8,12 +8,14 @@ const router = express.Router();
 
 const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
+const departmentRoutes = require('./departmentRoutes');
 
 /**
  * Mount all routes
  */
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/departments', departmentRoutes);
 
 /**
  * Health check endpoint
