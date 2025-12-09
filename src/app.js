@@ -1,63 +1,132 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import morgan from 'morgan';
+/**
+ * Smart Campus Platform - Main Application Entry Point
+ * Express server with authentication, user management, and API routes
+ */
 
-// Load environment variables
-dotenv.config();
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const helmet = require('helmet');
+const path = require('path');
 
+const { sequelize } = require('./models');
+const apiRoutes = require('./routes');
+const { errorHandler } = require('./middleware/errorHandler');
+
+// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('dev'));
+// ============================================
+// MIDDLEWARE
+// ============================================
 
-// Routes
+// Security middleware
+app.use(helmet());
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Body parser middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging middleware
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
+
+// Serve static files (uploaded files)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// ============================================
+// ROUTES
+// ============================================
+
+// Root endpoint
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
+    success: true,
     message: 'Smart Campus Platform API',
     version: '1.0.0',
-    status: 'running'
-  });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok',
+    status: 'running',
     timestamp: new Date().toISOString()
   });
 });
 
-// API Routes (will be added later)
-// import userRoutes from './routes/userRoutes.js';
-// import authRoutes from './routes/authRoutes.js';
-// app.use('/api/users', userRoutes);
-// app.use('/api/auth', authRoutes);
+// Mount API routes at /api/v1
+app.use('/api/v1', apiRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+// ============================================
+// ERROR HANDLING
+// ============================================
+
+// 404 handler - must be before error handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: `Route ${req.originalUrl} not found`
+    }
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Route not found' 
-  });
+// Global error handler - must be last
+app.use(errorHandler);
+
+// ============================================
+// DATABASE CONNECTION & SERVER START
+// ============================================
+
+const startServer = async () => {
+  try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log('✅ Database connection established successfully.');
+
+    // Sync database (in development only)
+    if (process.env.NODE_ENV === 'development' && process.env.DB_SYNC === 'true') {
+      await sequelize.sync({ alter: false });
+      console.log('✅ Database synchronized.');
+    }
+
+    // Start server
+    app.listen(PORT, () => {
+      console.log('');
+      console.log('🚀 ========================================');
+      console.log(`   Smart Campus Platform API Server`);
+      console.log('   ========================================');
+      console.log(`   🌐 Server: http://localhost:${PORT}`);
+      console.log(`   📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`   🗄️  Database: ${process.env.DB_NAME}`);
+      console.log('   ========================================');
+      console.log('');
+    });
+
+  } catch (error) {
+    console.error('❌ Unable to start server:', error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Promise Rejection:', err);
+  // Close server & exit process
+  process.exit(1);
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-export default app;
+module.exports = app;
 
