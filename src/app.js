@@ -28,8 +28,23 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // CORS configuration
+const allowedOrigins = [
+  'http://localhost:3001', // Local development
+  'http://localhost:3000', // Local frontend dev server
+  process.env.FRONTEND_URL, // Production frontend (from env)
+].filter(Boolean); // Remove undefined values
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
