@@ -27,25 +27,41 @@ const PORT = process.env.PORT || 3000;
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
-const allowedOrigins = [
-  'http://localhost:3001', // Local development
-  'http://localhost:3000', // Local frontend dev server
-  process.env.FRONTEND_URL, // Production frontend (from env)
-].filter(Boolean); // Remove undefined values
-
+// CORS configuration - Allow all Vercel and localhost origins
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman)
-    if (!origin) return callback(null, true);
+    console.log('🔍 CORS Request from origin:', origin);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      console.log('✅ CORS: Allowed (no origin)');
+      return callback(null, true);
     }
+    
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      console.log('✅ CORS: Allowed (localhost)');
+      return callback(null, true);
+    }
+    
+    // Allow all Vercel deployments
+    if (origin.includes('.vercel.app')) {
+      console.log('✅ CORS: Allowed (Vercel)');
+      return callback(null, true);
+    }
+    
+    // Allow specific frontend URL from environment
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
+      console.log('✅ CORS: Allowed (FRONTEND_URL)');
+      return callback(null, true);
+    }
+    
+    console.log('❌ CORS: Blocked -', origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
