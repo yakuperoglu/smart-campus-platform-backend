@@ -1,11 +1,11 @@
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'smart_campus_db',
-  process.env.DB_USER || 'postgres',
-  process.env.DB_PASSWORD || 'password',
+  process.env.DB_NAME || 'smartcampusedb',
+  process.env.DB_USER || 'yaqp',
+  process.env.DB_PASSWORD || 'I6slTyhtol4CSZpH4PzNZ7NvxycDsyUb',
   {
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || 'dpg-d4s4t0p5pdvs73bvmip0-a.frankfurt-postgres.render.com',
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
