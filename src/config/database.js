@@ -1,24 +1,36 @@
 const { Sequelize } = require('sequelize');
 
-// Determine if SSL should be used (only for remote databases, not local Docker)
-const useSSL = process.env.DB_USE_SSL === 'true' || 
-               (process.env.DB_HOST && !['localhost', 'postgres', '127.0.0.1'].includes(process.env.DB_HOST));
+// SSL ayarlarını veritabanı host'una göre belirle
+// Yerel container (postgres) veya localhost için SSL gerekmiyor
+// Render, AWS RDS gibi uzak veritabanları için SSL gerekli
+const dbHost = process.env.DB_HOST || 'dpg-d4s4t0p5pdvs73bvmip0-a.frankfurt-postgres.render.com';
+const isLocalDB = dbHost === 'postgres' || dbHost === 'localhost' || dbHost === '127.0.0.1';
+
+const dialectOptions = {};
+// Uzak veritabanı (Render, AWS RDS, vb.) için SSL kullan
+if (!isLocalDB) {
+  dialectOptions.ssl = {
+    require: true,
+    rejectUnauthorized: false
+  };
+}
+
+console.log('🔗 Database Connection Config:');
+console.log(`   Host: ${dbHost}`);
+console.log(`   Port: ${process.env.DB_PORT || 5432}`);
+console.log(`   Database: ${process.env.DB_NAME || 'smartcampusedb'}`);
+console.log(`   SSL: ${!isLocalDB ? 'Enabled' : 'Disabled'}`);
 
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'smartcampusedb',
   process.env.DB_USER || 'yaqp',
   process.env.DB_PASSWORD || 'I6slTyhtol4CSZpH4PzNZ7NvxycDsyUb',
   {
-    host: process.env.DB_HOST || 'dpg-d4s4t0p5pdvs73bvmip0-a.frankfurt-postgres.render.com',
+    host: dbHost,
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    dialectOptions: useSSL ? {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    } : {},
+    dialectOptions,
     pool: {
       max: 5,
       min: 0,
