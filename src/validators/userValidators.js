@@ -126,11 +126,11 @@ const changePasswordSchema = {
     }),
     newPassword: Joi.string()
       .min(8)
-      .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])'))
+      .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])'))
       .required()
       .messages({
         'string.min': 'Password must be at least 8 characters long',
-        'string.pattern.base': 'Password must contain uppercase, lowercase, number and special character',
+        'string.pattern.base': 'Password must contain uppercase, lowercase, number and at least one special character',
         'any.required': 'New password is required'
       }),
     confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
