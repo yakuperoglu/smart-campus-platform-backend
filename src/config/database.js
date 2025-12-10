@@ -1,5 +1,9 @@
 const { Sequelize } = require('sequelize');
 
+// Determine if SSL should be used (only for remote databases, not local Docker)
+const useSSL = process.env.DB_USE_SSL === 'true' || 
+               (process.env.DB_HOST && !['localhost', 'postgres', '127.0.0.1'].includes(process.env.DB_HOST));
+
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'smartcampusedb',
   process.env.DB_USER || 'yaqp',
@@ -9,12 +13,12 @@ const sequelize = new Sequelize(
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    dialectOptions: {
+    dialectOptions: useSSL ? {
       ssl: {
         require: true,
         rejectUnauthorized: false
       }
-    },
+    } : {},
     pool: {
       max: 5,
       min: 0,
