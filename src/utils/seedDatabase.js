@@ -1,9 +1,11 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const bcrypt = require('bcryptjs');
-const { 
-  User, 
-  Department, 
-  Student, 
-  Faculty, 
+const {
+  User,
+  Department,
+  Student,
+  Faculty,
   Admin,
   Course,
   Classroom,
@@ -60,7 +62,7 @@ async function seedDatabase() {
     // 3. Create Faculty Users
     console.log('👨‍🏫 Creating faculty users...');
     const facultyPassword = await bcrypt.hash('faculty123', 10);
-    
+
     const faculty1User = await User.create({
       email: 'john.doe@smartcampus.edu',
       password_hash: facultyPassword,
@@ -93,7 +95,7 @@ async function seedDatabase() {
     // 4. Create Student Users
     console.log('👨‍🎓 Creating student users...');
     const studentPassword = await bcrypt.hash('student123', 10);
-    
+
     for (let i = 1; i <= 5; i++) {
       const studentUser = await User.create({
         email: `student${i}@smartcampus.edu`,
@@ -101,7 +103,7 @@ async function seedDatabase() {
         role: 'student',
         is_verified: true
       });
-      
+
       await Student.create({
         user_id: studentUser.id,
         student_number: `2024${String(i).padStart(4, '0')}`,
@@ -109,9 +111,9 @@ async function seedDatabase() {
         gpa: parseFloat((2.5 + Math.random() * 1.5).toFixed(2)),
         cgpa: parseFloat((2.5 + Math.random() * 1.5).toFixed(2))
       });
-      
-      await Wallet.create({ 
-        user_id: studentUser.id, 
+
+      await Wallet.create({
+        user_id: studentUser.id,
         balance: parseFloat((50 + Math.random() * 200).toFixed(2))
       });
     }
@@ -229,7 +231,7 @@ async function seedDatabase() {
 // Allow running this script directly
 if (require.main === module) {
   const syncDatabase = require('./dbSync');
-  
+
   // First sync the database, then seed
   syncDatabase({ force: true })
     .then(() => seedDatabase())

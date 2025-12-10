@@ -80,6 +80,24 @@ const updateCurrentUser = async (req, res, next) => {
     const role = req.user.role;
     const updates = req.body;
 
+    // Get user
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return next(new AppError('User not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    // Update User table fields (personal information)
+    const userUpdates = {};
+    if (updates.first_name !== undefined) userUpdates.first_name = updates.first_name;
+    if (updates.last_name !== undefined) userUpdates.last_name = updates.last_name;
+    if (updates.phone !== undefined) userUpdates.phone = updates.phone;
+    if (updates.address !== undefined) userUpdates.address = updates.address;
+
+    // Update user if there are any user-level updates
+    if (Object.keys(userUpdates).length > 0) {
+      await user.update(userUpdates);
+    }
+
     // Update role-specific profile
     let updatedProfile = null;
 
@@ -104,7 +122,10 @@ const updateCurrentUser = async (req, res, next) => {
       if (updates.gpa !== undefined) allowedUpdates.gpa = updates.gpa;
       if (updates.cgpa !== undefined) allowedUpdates.cgpa = updates.cgpa;
 
-      await student.update(allowedUpdates);
+      if (Object.keys(allowedUpdates).length > 0) {
+        await student.update(allowedUpdates);
+      }
+
       updatedProfile = await Student.findOne({
         where: { user_id: userId },
         include: [{ model: Department, as: 'department' }]
@@ -126,18 +147,36 @@ const updateCurrentUser = async (req, res, next) => {
         allowedUpdates.department_id = updates.department_id;
       }
 
-      await faculty.update(allowedUpdates);
+      if (Object.keys(allowedUpdates).length > 0) {
+        await faculty.update(allowedUpdates);
+      }
+
       updatedProfile = await Faculty.findOne({
         where: { user_id: userId },
         include: [{ model: Department, as: 'department' }]
       });
     }
 
+    // Get updated user data
+    const updatedUser = await User.findByPk(userId, {
+      attributes: { exclude: ['password_hash', 'refresh_token'] }
+    });
+
+    // Get wallet
+    const wallet = await Wallet.findOne({
+      where: { user_id: userId },
+      attributes: ['id', 'balance', 'currency', 'is_active']
+    });
+
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
       data: {
-        profile: updatedProfile
+        user: {
+          ...updatedUser.toJSON(),
+          profile: updatedProfile,
+          wallet
+        }
       }
     });
 
@@ -238,15 +277,15 @@ const getAllUsers = async (req, res, next) => {
 
     // Build where clause
     const where = {};
-    
+
     if (role) {
       where.role = role;
     }
-    
+
     if (is_verified !== undefined) {
       where.is_verified = is_verified === 'true' || is_verified === true;
     }
-    
+
     if (search) {
       where.email = {
         [Op.iLike]: `%${search}%`
@@ -269,7 +308,7 @@ const getAllUsers = async (req, res, next) => {
     const usersWithProfiles = await Promise.all(
       users.map(async (user) => {
         let profile = null;
-        
+
         if (user.role === 'student') {
           profile = await Student.findOne({
             where: { user_id: user.id },
@@ -335,7 +374,7 @@ const getUserById = async (req, res, next) => {
 
     // Get role-specific profile
     let profile = null;
-    
+
     if (user.role === 'student') {
       profile = await Student.findOne({
         where: { user_id: user.id },

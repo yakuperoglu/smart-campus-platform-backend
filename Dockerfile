@@ -30,13 +30,16 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 # Copy application files
 COPY --chown=nodejs:nodejs . .
 
-# Copy and set permissions for entrypoint script
-COPY --chown=nodejs:nodejs entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-# Create uploads directory with proper permissions
-RUN mkdir -p uploads/profiles && \
+# Fix line endings for entrypoint script, create uploads directory, and set permissions (as root)
+USER root
+RUN sed -i 's/\r$//' /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
+    chown nodejs:nodejs /app/entrypoint.sh && \
+    mkdir -p uploads/profiles && \
     chown -R nodejs:nodejs uploads
+
+# Switch to non-root user
+USER nodejs
 
 # Switch to non-root user
 USER nodejs
@@ -52,4 +55,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application with entrypoint script
-CMD ["/app/entrypoint.sh", "node", "src/app.js"]
+CMD ["sh", "/app/entrypoint.sh", "node", "src/app.js"]
