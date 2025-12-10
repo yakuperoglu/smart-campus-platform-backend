@@ -37,14 +37,18 @@ echo "🔄 Checking database status..."
 if [ "$AUTO_INIT_DB" = "true" ]; then
   echo "📊 Initializing database tables and seed data..."
   echo "⚠️  This will create tables and seed data if they don't exist."
+  echo ""
   
   # Tabloları oluştur ve örnek verileri ekle
-  node src/utils/seedDatabase.js || {
-    echo "⚠️  Database already initialized or seed failed. Continuing..."
-  }
+  # Yeni init script kullanıyoruz - exit etmez, devam eder
+  node src/utils/initDatabase.js
+  
+  echo "✅ Database initialization process completed."
+  echo ""
 else
   echo "ℹ️  AUTO_INIT_DB is not enabled. Skipping database initialization."
-  echo "💡 To enable auto-initialization, set AUTO_INIT_DB=true in docker-compose.yml"
+  echo "💡 To enable auto-initialization, set AUTO_INIT_DB=true"
+  echo ""
 fi
 
 echo "🎉 Starting application server..."
