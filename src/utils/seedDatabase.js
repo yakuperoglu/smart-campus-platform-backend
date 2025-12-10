@@ -232,8 +232,20 @@ async function seedDatabase() {
 if (require.main === module) {
   const syncDatabase = require('./dbSync');
 
+  // Check if --force flag is provided
+  const args = process.argv.slice(2);
+  const useForce = args.includes('--force');
+
+  console.log('⚠️  WARNING: Running seedDatabase directly');
+  if (useForce) {
+    console.log('⚠️  --force flag detected: ALL DATA WILL BE DELETED!');
+  } else {
+    console.log('ℹ️  Safe mode: existing tables will NOT be dropped');
+    console.log('💡 Use --force flag to drop and recreate tables');
+  }
+
   // First sync the database, then seed
-  syncDatabase({ force: true })
+  syncDatabase({ force: useForce, alter: false })
     .then(() => seedDatabase())
     .then(() => {
       console.log('✅ All operations completed successfully.');

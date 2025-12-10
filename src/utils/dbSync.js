@@ -18,46 +18,79 @@ async function syncDatabase(options = {}) {
     console.log('✅ Database connection established successfully.');
 
     if (force) {
-      console.log('⚠️  Dropping all tables...');
-      await sequelize.drop();
+      console.log('⚠️  Dropping all tables manually...');
+      // Drop tables in reverse dependency order
+      await sequelize.query('DROP TABLE IF EXISTS "excuse_requests" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "attendance_records" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "meal_reservations" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "attendance_sessions" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "enrollments" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "event_registrations" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "meal_menus" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "course_sections" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "course_prerequisites" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "transactions" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "sensor_data" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "events" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "courses" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "notifications" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "password_resets" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "email_verifications" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "wallets" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "admins" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "faculty" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "students" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "iot_sensors" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "cafeterias" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "classrooms" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "users" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "departments" CASCADE;');
+      // Drop enums
+      await sequelize.query('DROP TYPE IF EXISTS "enum_notifications_type" CASCADE;');
+      await sequelize.query('DROP TYPE IF EXISTS "enum_notifications_priority" CASCADE;');
+      await sequelize.query('DROP TYPE IF EXISTS "enum_transactions_type" CASCADE;');
+      await sequelize.query('DROP TYPE IF EXISTS "enum_meal_menus_meal_type" CASCADE;');
+      await sequelize.query('DROP TYPE IF EXISTS "enum_attendance_records_status" CASCADE;');
+      await sequelize.query('DROP TYPE IF EXISTS "enum_excuse_requests_status" CASCADE;');
+      await sequelize.query('DROP TYPE IF EXISTS "enum_iot_sensors_sensor_type" CASCADE;');
       console.log('✅ All tables dropped.');
     }
 
     // Sync models in dependency order to avoid foreign key constraint errors
     // Level 1: Independent tables (no foreign keys)
-    await models.Department.sync({ alter });
-    await models.User.sync({ alter });
-    await models.Classroom.sync({ alter });
-    await models.Cafeteria.sync({ alter });
-    await models.IoTSensor.sync({ alter });
+    await models.Department.sync({ force: false, alter });
+    await models.User.sync({ force: false, alter });
+    await models.Classroom.sync({ force: false, alter });
+    await models.Cafeteria.sync({ force: false, alter });
+    await models.IoTSensor.sync({ force: false, alter });
 
     // Level 2: Tables that depend on Level 1
-    await models.Student.sync({ alter });
-    await models.Faculty.sync({ alter });
-    await models.Admin.sync({ alter });
-    await models.Wallet.sync({ alter });
-    await models.EmailVerification.sync({ alter });
-    await models.PasswordReset.sync({ alter });
-    await models.Notification.sync({ alter });
-    await models.Course.sync({ alter });
-    await models.Event.sync({ alter });
-    await models.SensorData.sync({ alter });
+    await models.Student.sync({ force: false, alter });
+    await models.Faculty.sync({ force: false, alter });
+    await models.Admin.sync({ force: false, alter });
+    await models.Wallet.sync({ force: false, alter });
+    await models.EmailVerification.sync({ force: false, alter });
+    await models.PasswordReset.sync({ force: false, alter });
+    await models.Notification.sync({ force: false, alter });
+    await models.Course.sync({ force: false, alter });
+    await models.Event.sync({ force: false, alter });
+    await models.SensorData.sync({ force: false, alter });
 
     // Level 3: Tables that depend on Level 2
-    await models.Transaction.sync({ alter });
-    await models.CoursePrerequisite.sync({ alter });
-    await models.CourseSection.sync({ alter });
-    await models.MealMenu.sync({ alter });
-    await models.EventRegistration.sync({ alter });
+    await models.Transaction.sync({ force: false, alter });
+    await models.CoursePrerequisite.sync({ force: false, alter });
+    await models.CourseSection.sync({ force: false, alter });
+    await models.MealMenu.sync({ force: false, alter });
+    await models.EventRegistration.sync({ force: false, alter });
 
     // Level 4: Tables that depend on Level 3
-    await models.Enrollment.sync({ alter });
-    await models.AttendanceSession.sync({ alter });
-    await models.MealReservation.sync({ alter });
+    await models.Enrollment.sync({ force: false, alter });
+    await models.AttendanceSession.sync({ force: false, alter });
+    await models.MealReservation.sync({ force: false, alter });
 
     // Level 5: Tables that depend on Level 4
-    await models.AttendanceRecord.sync({ alter });
-    await models.ExcuseRequest.sync({ alter });
+    await models.AttendanceRecord.sync({ force: false, alter });
+    await models.ExcuseRequest.sync({ force: false, alter });
     
     if (force) {
       console.log('⚠️  All tables have been dropped and recreated.');

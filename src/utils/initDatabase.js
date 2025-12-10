@@ -54,13 +54,25 @@ async function initDatabase() {
       console.log('');
     }
 
-    // Sync database (creates tables)
+    // Sync database (creates tables WITHOUT dropping existing ones)
     console.log('🔄 Starting database synchronization...');
-    await syncDatabase({ force: true });
+    console.log('⚠️  Using safe mode: existing tables will NOT be dropped.');
+    await syncDatabase({ force: false, alter: false });
     
-    // Seed database (adds initial data)
-    console.log('');
-    await seedDatabase();
+    // Check if we need to seed
+    const [userCount] = await sequelize.query('SELECT COUNT(*) as count FROM users;');
+    const usersExist = parseInt(userCount[0].count) > 0;
+    
+    if (usersExist) {
+      console.log('');
+      console.log('ℹ️  Database already contains data. Skipping seed to prevent duplicates.');
+      console.log('');
+    } else {
+      // Seed database (adds initial data)
+      console.log('');
+      console.log('📊 Database is empty. Starting seeding...');
+      await seedDatabase();
+    }
     
     console.log('✅ Database initialization completed successfully.');
     console.log('');
@@ -86,15 +98,27 @@ async function initDatabase() {
 // We always exit with code 0 to allow the container to continue
 (async () => {
   try {
-    await initDatabase();
-    // Close database connection
+    const success = await initDatabase();
+    
+    // Close database connection pool cleanly
     const { sequelize } = require('../models');
-    await sequelize.close();
-    process.exit(0);
+    console.log('🔌 Closing database connection pool...');
+    await sequelize.connectionManager.close();
+    console.log('✅ Connection pool closed.');
+    console.log('💡 Application will create a new connection pool on startup.');
+    console.log('');
+    
+    // Give time for all pending operations to complete
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
+    
   } catch (error) {
     console.error('❌ Unexpected error during initialization:', error);
     // Still exit with 0 to allow container to start
-    process.exit(0);
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
   }
 })();
 
