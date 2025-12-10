@@ -55,4 +55,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application with entrypoint script
-CMD ["sh", "/app/entrypoint.sh", "node", "src/app.js"]
+CMD ["sh", "/app/entrypoint.sh", "node", "src/server.js"]
