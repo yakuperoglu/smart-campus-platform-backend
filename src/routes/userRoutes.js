@@ -12,7 +12,8 @@ const {
   uploadProfilePicture,
   deleteProfilePicture,
   getAllUsers,
-  getUserById
+  getUserById,
+  changePassword
 } = require('../controllers/userController');
 
 const { verifyToken } = require('../middleware/authMiddleware');
@@ -22,7 +23,8 @@ const validate = require('../middleware/validate');
 const {
   updateProfileSchema,
   getUsersQuerySchema,
-  userIdParamSchema
+  userIdParamSchema,
+  changePasswordSchema
 } = require('../validators/userValidators');
 
 /**
@@ -45,6 +47,14 @@ router.put('/me', verifyToken, validate(updateProfileSchema), updateCurrentUser)
  * @access  Private
  */
 router.post('/me/profile-picture', verifyToken, uploadMiddleware, uploadProfilePicture);
+
+/**
+ * @route   POST /api/v1/users/me/change-password
+ * @desc    Change password
+ * @access  Private
+ */
+router.post('/me/change-password', verifyToken, validate(changePasswordSchema), changePassword);
+
 
 /**
  * @route   DELETE /api/v1/users/me/profile-picture

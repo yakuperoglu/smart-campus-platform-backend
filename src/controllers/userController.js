@@ -4,6 +4,7 @@
  */
 
 const { Op } = require('sequelize');
+const bcrypt = require('bcryptjs');
 const { User, Student, Faculty, Admin, Department, Wallet } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const { deleteOldProfilePicture } = require('../middleware/uploadMiddleware');
@@ -406,11 +407,52 @@ const getUserById = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   POST /api/v1/users/me/change-password
+ * @desc    Change current user password
+ * @access  Private
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    // Get user with password hash
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return next(new AppError('User not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    // Check current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isPasswordValid) {
+      return next(new AppError('Invalid current password', 400, 'INVALID_PASSWORD'));
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_ROUNDS) || 10);
+    const password_hash = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await user.update({ password_hash });
+
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 module.exports = {
   getCurrentUser,
   updateCurrentUser,
   uploadProfilePicture,
   deleteProfilePicture,
   getAllUsers,
-  getUserById
+  getUserById,
+  changePassword
 };
