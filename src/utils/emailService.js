@@ -8,22 +8,35 @@ const nodemailer = require('nodemailer');
 /**
  * Create email transporter
  * In development, use ethereal.email (mock SMTP) or configure real SMTP
+ * Supports both SMTP_* and EMAIL_* environment variables for compatibility
  */
 const createTransporter = async () => {
-  // For production, use real SMTP credentials from .env
-  if (process.env.NODE_ENV === 'production' && process.env.SMTP_HOST) {
+  // Support both SMTP_* (direct) and EMAIL_* (Docker) variable names
+  const emailHost = process.env.SMTP_HOST || process.env.EMAIL_HOST;
+  const emailPort = process.env.SMTP_PORT || process.env.EMAIL_PORT;
+  const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const emailPassword = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
+  
+  // Check if we have real SMTP credentials configured
+  const hasRealSMTP = emailHost && emailUser && emailPassword && 
+                      emailHost !== 'smtp.ethereal.email';
+  
+  // For production or when real SMTP is configured, use provided credentials
+  if (hasRealSMTP) {
+    console.log(`📧 Using configured SMTP: ${emailHost}`);
     return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT || 587,
+      host: emailHost,
+      port: parseInt(emailPort) || 587,
       secure: false, // true for 465, false for other ports
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD
+        user: emailUser,
+        pass: emailPassword
       }
     });
   }
 
-  // For development, create test account using Ethereal
+  // For development/testing, create test account using Ethereal
+  console.log('📧 Using Ethereal (test) SMTP - emails won\'t be delivered to real addresses');
   const testAccount = await nodemailer.createTestAccount();
   return nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -46,7 +59,7 @@ const sendVerificationEmail = async (email, token) => {
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/verify-email?token=${token}`;
     
     const mailOptions = {
-      from: `"Smart Campus Platform" <${process.env.SMTP_USER || 'noreply@smartcampus.edu'}>`,
+      from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
       to: email,
       subject: 'Verify Your Email - Smart Campus Platform',
       html: `
@@ -99,7 +112,7 @@ const sendPasswordResetEmail = async (email, token) => {
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password?token=${token}`;
     
     const mailOptions = {
-      from: `"Smart Campus Platform" <${process.env.SMTP_USER || 'noreply@smartcampus.edu'}>`,
+      from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
       to: email,
       subject: 'Password Reset Request - Smart Campus Platform',
       html: `
@@ -153,7 +166,7 @@ const sendWelcomeEmail = async (email, name) => {
     const transporter = await createTransporter();
     
     const mailOptions = {
-      from: `"Smart Campus Platform" <${process.env.SMTP_USER || 'noreply@smartcampus.edu'}>`,
+      from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
       to: email,
       subject: 'Welcome to Smart Campus Platform!',
       html: `
