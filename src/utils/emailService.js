@@ -17,6 +17,13 @@ const createTransporter = async () => {
   const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
   const emailPassword = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
   
+  console.log('📧 Email Config:', { 
+    host: emailHost, 
+    port: emailPort, 
+    user: emailUser ? emailUser.substring(0, 5) + '***' : 'NOT SET',
+    hasPassword: !!emailPassword 
+  });
+  
   // Check if we have real SMTP credentials configured
   const hasRealSMTP = emailHost && emailUser && emailPassword && 
                       emailHost !== 'smtp.ethereal.email';
@@ -24,10 +31,22 @@ const createTransporter = async () => {
   // For production or when real SMTP is configured, use provided credentials
   if (hasRealSMTP) {
     console.log(`📧 Using configured SMTP: ${emailHost}`);
+    
+    // Gmail için özel ayarlar
+    if (emailHost.includes('gmail')) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: emailUser,
+          pass: emailPassword
+        }
+      });
+    }
+    
     return nodemailer.createTransport({
       host: emailHost,
       port: parseInt(emailPort) || 587,
-      secure: false, // true for 465, false for other ports
+      secure: parseInt(emailPort) === 465,
       auth: {
         user: emailUser,
         pass: emailPassword
@@ -37,6 +56,7 @@ const createTransporter = async () => {
 
   // For development/testing, create test account using Ethereal
   console.log('📧 Using Ethereal (test) SMTP - emails won\'t be delivered to real addresses');
+  console.log('📧 To send real emails, configure EMAIL_HOST, EMAIL_USER, EMAIL_PASSWORD in .env');
   const testAccount = await nodemailer.createTestAccount();
   return nodemailer.createTransport({
     host: 'smtp.ethereal.email',

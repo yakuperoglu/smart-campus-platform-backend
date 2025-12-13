@@ -34,10 +34,8 @@ const verifyToken = async (req, res, next) => {
         return next(new AppError('User not found', 401, 'USER_NOT_FOUND'));
       }
 
-      // Check if user is verified
-      if (!user.is_verified) {
-        return next(new AppError('Email not verified. Please verify your email first', 403, 'EMAIL_NOT_VERIFIED'));
-      }
+      // Email doğrulaması olmadan da sisteme erişilebilir
+      // Kullanıcı profil sayfasından email'ini doğrulayabilir
 
       // Attach user to request
       req.user = user;
@@ -72,7 +70,7 @@ const optionalAuth = async (req, res, next) => {
         attributes: { exclude: ['password_hash', 'refresh_token'] }
       });
 
-      if (user && user.is_verified) {
+      if (user) {
         req.user = user;
       }
     } catch (error) {

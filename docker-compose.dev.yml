@@ -1,0 +1,21 @@
+# ============================================
+# SMART CAMPUS BACKEND - Docker Compose (Development)
+# ============================================
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./src:/app/src:ro
+      - ./uploads:/app/uploads
+    command: npm run dev
+

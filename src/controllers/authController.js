@@ -203,10 +203,8 @@ const login = async (req, res, next) => {
       return next(new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS'));
     }
 
-    // Check if email is verified
-    if (!user.is_verified) {
-      return next(new AppError('Please verify your email before logging in', 403, 'EMAIL_NOT_VERIFIED'));
-    }
+    // Email doğrulaması olmadan giriş yapılabilir
+    // Kullanıcı profil sayfasından email'ini doğrulayabilir
 
     // Generate tokens
     const { accessToken, refreshToken } = generateTokenPair(user.id);
@@ -376,6 +374,62 @@ const forgotPassword = async (req, res, next) => {
 };
 
 /**
+ * @route   POST /api/v1/auth/resend-verification
+ * @desc    Resend email verification link
+ * @access  Private
+ */
+const resendVerification = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return next(new AppError('User not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    // Check if already verified
+    if (user.is_verified) {
+      return res.status(200).json({
+        success: true,
+        message: 'Email is already verified'
+      });
+    }
+
+    // Delete old verification tokens for this user
+    await EmailVerification.destroy({ where: { user_id: user.id } });
+
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await EmailVerification.create({
+      user_id: user.id,
+      token: verificationToken,
+      expires_at: expiresAt,
+      is_used: false
+    });
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, verificationToken);
+      console.log(`✅ Verification email sent to: ${user.email}`);
+    } catch (emailError) {
+      console.error('❌ Email sending failed:', emailError.message);
+      return next(new AppError('E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin.', 500, 'EMAIL_SEND_FAILED'));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Verification email sent successfully. Please check your inbox.'
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @route   POST /api/v1/auth/reset-password
  * @desc    Reset password using token
  * @access  Public
@@ -434,5 +488,6 @@ module.exports = {
   refreshAccessToken,
   logout,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  resendVerification
 };

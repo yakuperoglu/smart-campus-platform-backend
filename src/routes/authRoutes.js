@@ -13,7 +13,8 @@ const {
   refreshAccessToken,
   logout,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  resendVerification
 } = require('../controllers/authController');
 
 const { verifyToken } = require('../middleware/authMiddleware');
@@ -213,5 +214,22 @@ router.post('/forgot-password', validate(forgotPasswordSchema), forgotPassword);
  * @access  Public
  */
 router.post('/reset-password', validate(resetPasswordSchema), resetPassword);
+
+/**
+ * @swagger
+ * /auth/resend-verification:
+ *   post:
+ *     summary: Resend email verification
+ *     description: Resend verification email to user's email address
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Verification email sent successfully
+ *       401:
+ *         description: Not authenticated
+ */
+router.post('/resend-verification', verifyToken, resendVerification);
 
 module.exports = router;

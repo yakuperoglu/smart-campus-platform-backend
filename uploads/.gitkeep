@@ -1,0 +1,3 @@
+# Bu dosya uploads klasörünün Git'e eklenmesini sağlar
+# Yüklenen dosyalar .gitignore ile hariç tutulur
+
