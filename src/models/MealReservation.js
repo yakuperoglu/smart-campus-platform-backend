@@ -32,7 +32,6 @@ const MealReservation = sequelize.define('MealReservation', {
   qr_code_str: {
     type: DataTypes.STRING(255),
     allowNull: true,
-    unique: true,
     comment: 'QR code string for meal pickup verification'
   },
   reservation_time: {

@@ -226,6 +226,22 @@ const options = {
         description: 'User profile and management endpoints'
       },
       {
+        name: 'Enrollments',
+        description: 'Course enrollment management endpoints'
+      },
+      {
+        name: 'Grades',
+        description: 'Grade management and transcript endpoints'
+      },
+      {
+        name: 'Attendance',
+        description: 'GPS-based attendance management endpoints'
+      },
+      {
+        name: 'Sections',
+        description: 'Course section management endpoints'
+      },
+      {
         name: 'Health',
         description: 'System health check endpoints'
       }

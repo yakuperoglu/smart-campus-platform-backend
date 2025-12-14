@@ -35,7 +35,6 @@ const AttendanceSession = sequelize.define('AttendanceSession', {
   session_code: {
     type: DataTypes.STRING(100),
     allowNull: true,
-    unique: true,
     comment: 'QR code or unique session code for check-in'
   },
   geofence_radius: {
