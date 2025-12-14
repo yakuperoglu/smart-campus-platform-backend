@@ -8,6 +8,7 @@ const {
   Faculty,
   Admin,
   Course,
+  CourseSection,
   Classroom,
   Cafeteria,
   Wallet
@@ -212,6 +213,80 @@ async function seedDatabase() {
       }
     ]);
     console.log(`✅ Created ${cafeterias.length} cafeterias`);
+
+    // 8. Create Course Sections and assign to faculty
+    console.log('📝 Creating course sections...');
+    
+    // Get faculty records
+    const faculty1 = await Faculty.findOne({ 
+      where: { employee_number: 'FAC001' }
+    });
+    const faculty2 = await Faculty.findOne({ 
+      where: { employee_number: 'FAC002' }
+    });
+
+    // Find courses
+    const calculusCourse = await Course.findOne({ where: { code: 'MATH101' } });
+    const ce101Course = await Course.findOne({ where: { code: 'CE101' } });
+    const ee101Course = await Course.findOne({ where: { code: 'EE101' } });
+
+    // Create sections with instructors
+    if (calculusCourse && faculty1) {
+      await CourseSection.create({
+        course_id: calculusCourse.id,
+        instructor_id: faculty1.id,
+        section_number: '01',
+        semester: 'Spring',
+        year: 2024,
+        capacity: 50,
+        enrolled_count: 0,
+        classroom_id: classrooms[2].id, // Science Building
+        schedule_json: [
+          { day: 'Monday', start_time: '09:00', end_time: '10:30' },
+          { day: 'Wednesday', start_time: '09:00', end_time: '10:30' },
+          { day: 'Friday', start_time: '09:00', end_time: '10:00' }
+        ]
+      });
+      console.log('✅ Created Calculus I section for john.doe');
+    }
+
+    if (ce101Course && faculty1) {
+      await CourseSection.create({
+        course_id: ce101Course.id,
+        instructor_id: faculty1.id,
+        section_number: '01',
+        semester: 'Spring',
+        year: 2024,
+        capacity: 40,
+        enrolled_count: 0,
+        classroom_id: classrooms[0].id, // Engineering Building 101
+        schedule_json: [
+          { day: 'Monday', start_time: '09:00', end_time: '10:30' },
+          { day: 'Wednesday', start_time: '09:00', end_time: '10:30' }
+        ]
+      });
+      console.log('✅ Created CE101 section for john.doe');
+    }
+
+    if (ee101Course && faculty2) {
+      await CourseSection.create({
+        course_id: ee101Course.id,
+        instructor_id: faculty2.id,
+        section_number: '01',
+        semester: 'Spring',
+        year: 2024,
+        capacity: 35,
+        enrolled_count: 0,
+        classroom_id: classrooms[1].id, // Engineering Building 201
+        schedule_json: [
+          { day: 'Tuesday', start_time: '11:00', end_time: '12:30' },
+          { day: 'Thursday', start_time: '11:00', end_time: '12:30' }
+        ]
+      });
+      console.log('✅ Created EE101 section for jane.smith');
+    }
+
+    console.log('✅ Course sections created');
 
     console.log('');
     console.log('🎉 Database seeding completed successfully!');
