@@ -248,6 +248,10 @@ const options = {
       {
         name: 'Health',
         description: 'System health check endpoints'
+      },
+      {
+        name: 'Departments',
+        description: 'Academic department endpoints'
       }
     ]
   },

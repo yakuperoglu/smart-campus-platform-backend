@@ -11,7 +11,9 @@ const {
     Faculty,
     User,
     Classroom,
-    CoursePrerequisite
+    CoursePrerequisite,
+    Enrollment,
+    Student
 } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 
@@ -98,6 +100,22 @@ const getCourses = async (req, res, next) => {
         // Get total count for pagination
         const totalCount = await Course.count({ where: courseWhere });
 
+        // Get student's enrolled section IDs if user is a student
+        let enrolledSectionIds = [];
+        if (req.user && req.user.role === 'student') {
+            const student = await Student.findOne({ where: { user_id: req.user.id } });
+            if (student) {
+                const enrollments = await Enrollment.findAll({
+                    where: {
+                        student_id: student.id,
+                        status: 'enrolled'
+                    },
+                    attributes: ['section_id']
+                });
+                enrolledSectionIds = enrollments.map(e => e.section_id);
+            }
+        }
+
         // Format response
         const formattedCourses = courses.map(course => ({
             id: course.id,
@@ -119,6 +137,7 @@ const getCourses = async (req, res, next) => {
                 capacity: section.capacity,
                 enrolled_count: section.enrolled_count,
                 available_seats: section.capacity - section.enrolled_count,
+                is_enrolled: enrolledSectionIds.includes(section.id),
                 schedule: section.schedule_json || [],
                 instructor: section.instructor ? {
                     id: section.instructor.id,
