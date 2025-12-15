@@ -196,7 +196,11 @@ const checkScheduleConflicts = async (studentId, newSectionId) => {
     throw new AppError('Section not found', 404, 'SECTION_NOT_FOUND');
   }
 
-  const newSchedule = newSection.schedule_json || [];
+  let newSchedule = newSection.schedule_json || [];
+
+  if (!Array.isArray(newSchedule)) {
+    newSchedule = [newSchedule];
+  }
 
   if (newSchedule.length === 0) {
     // No schedule defined, no conflicts possible
@@ -227,7 +231,10 @@ const checkScheduleConflicts = async (studentId, newSectionId) => {
   const conflicts = [];
 
   for (const enrollment of existingEnrollments) {
-    const existingSchedule = enrollment.section.schedule_json || [];
+    // Safety check for orphaned records
+    if (!enrollment.section) continue;
+
+    const existingSchedule = normalizeSchedule(enrollment.section.schedule_json);
 
     for (const newSlot of newSchedule) {
       for (const existingSlot of existingSchedule) {
