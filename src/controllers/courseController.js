@@ -396,7 +396,7 @@ const deleteCourse = async (req, res, next) => {
 const createSection = async (req, res, next) => {
     try {
         const { courseId } = req.params;
-        const { semester, year, section_number, capacity, schedule_json, classroom_id } = req.body;
+        const { semester, year, section_number, capacity, schedule_json, classroom_id, instructor_id } = req.body;
 
         // Verify course exists
         const course = await Course.findByPk(courseId);
@@ -425,6 +425,14 @@ const createSection = async (req, res, next) => {
             }
         }
 
+        // Verify instructor exists if provided
+        if (instructor_id) {
+            const instructor = await Faculty.findByPk(instructor_id);
+            if (!instructor) {
+                return next(new AppError('Instructor not found', 404, 'INSTRUCTOR_NOT_FOUND'));
+            }
+        }
+
         const section = await CourseSection.create({
             course_id: courseId,
             semester,
@@ -432,7 +440,8 @@ const createSection = async (req, res, next) => {
             section_number: section_number || '01',
             capacity: capacity || 30,
             schedule_json: schedule_json || [],
-            classroom_id,
+            classroom_id: classroom_id || null,
+            instructor_id: instructor_id || null,
             enrolled_count: 0
         });
 
