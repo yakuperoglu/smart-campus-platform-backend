@@ -175,6 +175,17 @@ const timeSlotsOverlap = (slot1, slot2) => {
 };
 
 /**
+ * Normalize schedule_json to a consistent array format
+ * @param {any} scheduleJson - The schedule JSON from database
+ * @returns {Array} - Array of schedule slots
+ */
+const normalizeSchedule = (scheduleJson) => {
+  if (!scheduleJson) return [];
+  if (Array.isArray(scheduleJson)) return scheduleJson;
+  return [scheduleJson];
+};
+
+/**
  * Check for schedule conflicts between a new section and existing enrollments
  * @param {string} studentId - The student ID
  * @param {string} newSectionId - The new section to check

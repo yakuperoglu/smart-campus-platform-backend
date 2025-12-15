@@ -226,6 +226,10 @@ const options = {
         description: 'User profile and management endpoints'
       },
       {
+        name: 'Courses',
+        description: 'Course browsing and listing endpoints'
+      },
+      {
         name: 'Enrollments',
         description: 'Course enrollment management endpoints'
       },
