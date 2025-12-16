@@ -14,6 +14,7 @@ const enrollmentRoutes = require('./enrollmentRoutes');
 const sectionRoutes = require('./sectionRoutes');
 const gradesRoutes = require('./gradesRoutes');
 const attendanceRoutes = require('./attendanceRoutes');
+const excuseRoutes = require('./excuseRoutes');
 
 /**
  * Mount all routes
@@ -26,6 +27,7 @@ router.use('/enrollments', enrollmentRoutes);
 router.use('/sections', sectionRoutes);
 router.use('/grades', gradesRoutes);
 router.use('/attendance', attendanceRoutes);
+router.use('/excuses', excuseRoutes);
 
 /**
  * Health check endpoint

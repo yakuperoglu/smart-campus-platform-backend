@@ -277,7 +277,32 @@ const getMyAttendanceHistory = async (req, res, next) => {
         history
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
 
+/**
+ * @route   PUT /api/v1/attendance/sessions/:sessionId/qr
+ * @desc    Rotate QR code for a session
+ * @access  Private (Faculty only)
+ */
+const rotateSessionQrCode = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { sessionId } = req.params;
+
+    const faculty = await Faculty.findOne({ where: { user_id: userId } });
+    if (!faculty) {
+      return next(new AppError('Faculty profile not found', 404, 'FACULTY_NOT_FOUND'));
+    }
+
+    const result = await attendanceService.rotateSessionQrCode(sessionId, faculty.id);
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
   } catch (error) {
     next(error);
   }
@@ -437,7 +462,7 @@ module.exports = {
   getActiveSessions,
   getMyAttendanceHistory,
   calculateDistance,
+  rotateSessionQrCode,
   updateRecordFlag,
   updateRecordStatus
 };
-

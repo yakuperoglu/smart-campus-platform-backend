@@ -11,7 +11,7 @@ const verifyToken = async (req, res, next) => {
   try {
     // Get token from header
     let token;
-    
+
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -27,7 +27,12 @@ const verifyToken = async (req, res, next) => {
 
       // Get user from database
       const user = await User.findByPk(decoded.id, {
-        attributes: { exclude: ['password_hash', 'refresh_token'] }
+        attributes: { exclude: ['password_hash', 'refresh_token'] },
+        include: [
+          { model: Student, as: 'studentProfile' },
+          { model: Faculty, as: 'facultyProfile' },
+          { model: Admin, as: 'adminProfile' }
+        ]
       });
 
       if (!user) {
@@ -55,7 +60,7 @@ const verifyToken = async (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
   try {
     let token;
-    
+
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
     }
@@ -76,7 +81,7 @@ const optionalAuth = async (req, res, next) => {
     } catch (error) {
       // Silently fail for optional auth
     }
-    
+
     next();
   } catch (error) {
     next(error);

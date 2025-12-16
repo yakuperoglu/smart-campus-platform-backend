@@ -140,11 +140,35 @@ async function seedDatabase() {
         department_id: departments[0].id
       },
       {
+        code: 'CE301',
+        name: 'Software Engineering',
+        description: 'Software development life cycle and methodologies',
+        credits: 3,
+        ects: 5,
+        department_id: departments[0].id
+      },
+      {
+        code: 'CE401',
+        name: 'Artificial Intelligence',
+        description: 'Introduction to AI and Machine Learning',
+        credits: 3,
+        ects: 5,
+        department_id: departments[0].id
+      },
+      {
         code: 'EE101',
         name: 'Circuit Analysis',
         description: 'Basic electrical circuit theory',
         credits: 3,
         ects: 5,
+        department_id: departments[1].id
+      },
+      {
+        code: 'EE202',
+        name: 'Digital Logic Design',
+        description: 'Boolean algebra and digital circuits',
+        credits: 4,
+        ects: 6,
         department_id: departments[1].id
       },
       {
@@ -156,12 +180,52 @@ async function seedDatabase() {
         department_id: departments[2].id
       },
       {
+        code: 'BA202',
+        name: 'Marketing Management',
+        description: 'Principles of marketing and consumer behavior',
+        credits: 3,
+        ects: 5,
+        department_id: departments[2].id
+      },
+      {
         code: 'MATH101',
         name: 'Calculus I',
         description: 'Differential calculus',
         credits: 4,
         ects: 6,
         department_id: departments[3].id
+      },
+      {
+        code: 'MATH102',
+        name: 'Calculus II',
+        description: 'Integral calculus',
+        credits: 4,
+        ects: 6,
+        department_id: departments[3].id
+      },
+      {
+        code: 'PHYS101',
+        name: 'General Physics I',
+        description: 'Mechanics and thermodynamics',
+        credits: 4,
+        ects: 6,
+        department_id: departments[3].id
+      },
+      {
+        code: 'HIST101',
+        name: 'History of Civilization',
+        description: 'Survey of world history',
+        credits: 2,
+        ects: 3,
+        department_id: departments[2].id
+      },
+      {
+        code: 'ART101',
+        name: 'Introduction to Art',
+        description: 'Art appreciation and history',
+        credits: 2,
+        ects: 3,
+        department_id: departments[2].id
       }
     ]);
     console.log(`✅ Created ${courses.length} courses`);
@@ -216,12 +280,12 @@ async function seedDatabase() {
 
     // 8. Create Course Sections and assign to faculty
     console.log('📝 Creating course sections...');
-    
+
     // Get faculty records
-    const faculty1 = await Faculty.findOne({ 
+    const faculty1 = await Faculty.findOne({
       where: { employee_number: 'FAC001' }
     });
-    const faculty2 = await Faculty.findOne({ 
+    const faculty2 = await Faculty.findOne({
       where: { employee_number: 'FAC002' }
     });
 

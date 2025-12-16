@@ -62,8 +62,8 @@ const calculateHaversineDistance = (lat1, lon1, lat2, lon2) => {
 
   // Haversine formula
   const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -94,7 +94,7 @@ const detectSpoofing = async (params) => {
 
   // 1. Check distance vs radius ratio
   const distance = calculateHaversineDistance(studentLat, studentLon, sessionLat, sessionLon);
-  
+
   if (distance > radius * SPOOFING_THRESHOLDS.DISTANCE_MULTIPLIER) {
     reasons.push(`Distance (${distance}m) exceeds ${SPOOFING_THRESHOLDS.DISTANCE_MULTIPLIER}x radius (${radius}m)`);
   }
@@ -775,6 +775,27 @@ const getStudentAttendanceHistory = async (studentId, options = {}) => {
   }));
 };
 
+const rotateSessionQrCode = async (sessionId, instructorId) => {
+  const session = await AttendanceSession.findByPk(sessionId);
+
+  if (!session) {
+    throw new AppError('Session not found', 404, 'SESSION_NOT_FOUND');
+  }
+
+  if (session.instructor_id !== instructorId) {
+    throw new AppError('Not authorized', 403, 'NOT_AUTHORIZED');
+  }
+
+  if (!session.is_active) {
+    throw new AppError('Session is not active', 400, 'SESSION_NOT_ACTIVE');
+  }
+
+  const newCode = generateSessionCode();
+  await session.update({ session_code: newCode });
+
+  return { session_code: newCode };
+};
+
 module.exports = {
   calculateHaversineDistance,
   generateSessionCode,
@@ -785,6 +806,6 @@ module.exports = {
   getSessionRecords,
   getActiveSessionsForStudent,
   getStudentAttendanceHistory,
+  rotateSessionQrCode,
   SPOOFING_THRESHOLDS
 };
-
