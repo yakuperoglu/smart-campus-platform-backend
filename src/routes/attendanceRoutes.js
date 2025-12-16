@@ -167,7 +167,6 @@ router.post(
       .isUUID()
       .withMessage('Session ID must be a valid UUID')
   ],
-  validate,
   attendanceController.endSession
 );
 
@@ -189,6 +188,22 @@ router.get(
   ],
   validate,
   attendanceController.getSessionRecords
+);
+
+/**
+ * @route   PUT /api/v1/attendance/sessions/:sessionId/qr
+ * @desc    Rotate session QR code
+ * @access  Private (Faculty only)
+ */
+router.put(
+  '/sessions/:sessionId/qr',
+  verifyToken,
+  authorize('faculty'),
+  [
+    param('sessionId').isUUID().withMessage('Session ID must be valid UUID')
+  ],
+  validate,
+  attendanceController.rotateSessionQrCode
 );
 
 // ==================== Student Routes ====================

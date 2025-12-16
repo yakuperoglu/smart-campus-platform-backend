@@ -18,7 +18,7 @@ const startServer = async () => {
         // Auto-initialize database if enabled
         if (process.env.AUTO_INIT_DB === 'true') {
             console.log('🔄 Checking database initialization status...');
-            
+
             try {
                 // Check if core tables exist
                 const [results] = await sequelize.query(`
@@ -28,16 +28,16 @@ const startServer = async () => {
                     AND table_type = 'BASE TABLE'
                     AND table_name IN ('users', 'departments', 'students', 'faculty', 'courses')
                 `);
-                
+
                 const tableCount = parseInt(results[0].table_count);
-                
+
                 if (tableCount < 5) {
                     console.log(`ℹ️  Found ${tableCount}/5 core tables. Initializing database...`);
-                    
+
                     // Import and run database initialization
                     const syncDatabase = require('./utils/dbSync');
                     await syncDatabase({ force: false, alter: false });
-                    
+
                     // Check if we need to seed
                     const [userCount] = await sequelize.query('SELECT COUNT(*) as count FROM users;');
                     if (parseInt(userCount[0].count) === 0) {
@@ -45,7 +45,7 @@ const startServer = async () => {
                         const seedDatabase = require('./utils/seedDatabase');
                         await seedDatabase();
                     }
-                    
+
                     console.log('✅ Database initialization completed.');
                 } else {
                     console.log(`✅ Database already initialized (${tableCount}/5 core tables found).`);
@@ -61,6 +61,10 @@ const startServer = async () => {
             await sequelize.sync({ alter: false });
             console.log('✅ Database synchronized.');
         }
+
+        // Initialize Background Jobs
+        const initJobs = require('./jobs');
+        initJobs();
 
         // Start server
         app.listen(PORT, () => {
