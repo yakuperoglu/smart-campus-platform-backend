@@ -33,6 +33,11 @@ const Transaction = sequelize.define('Transaction', {
     allowNull: true,
     comment: 'Reference to related entity (meal_reservation, event_registration, etc.)'
   },
+  reference_type: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: 'Type of referenced entity: meal_reservation, event_registration, deposit, etc.'
+  },
   status: {
     type: DataTypes.ENUM('pending', 'completed', 'failed', 'cancelled'),
     allowNull: false,

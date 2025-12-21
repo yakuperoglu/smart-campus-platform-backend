@@ -42,6 +42,25 @@ const EventRegistration = sequelize.define('EventRegistration', {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW
+  },
+  qr_code: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    comment: 'QR code for event check-in verification'
+  },
+  payment_status: {
+    type: DataTypes.ENUM('not_required', 'pending', 'completed', 'refunded'),
+    allowNull: false,
+    defaultValue: 'not_required'
+  },
+  transaction_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'transactions',
+      key: 'id'
+    },
+    comment: 'Reference to payment transaction if event is paid'
   }
 }, {
   tableName: 'event_registrations',
@@ -60,6 +79,11 @@ const EventRegistration = sequelize.define('EventRegistration', {
     },
     {
       fields: ['status']
+    },
+    {
+      unique: true,
+      fields: ['qr_code'],
+      where: { qr_code: { [require('sequelize').Op.ne]: null } }
     }
   ]
 });

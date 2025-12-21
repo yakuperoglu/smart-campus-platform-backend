@@ -23,12 +23,8 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api/v1',
-        description: 'Development server'
-      },
-      {
-        url: 'http://localhost:3000',
-        description: 'Base URL'
+        url: process.env.API_URL || 'http://localhost:3000/api/v1',
+        description: 'API Server'
       }
     ],
     components: {
@@ -160,6 +156,138 @@ const options = {
               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
             }
           }
+        },
+        // Part 3 Schemas
+        Wallet: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            user_id: { type: 'string', format: 'uuid' },
+            balance: { type: 'number', example: 150.50 },
+            currency: { type: 'string', example: 'TRY' },
+            is_active: { type: 'boolean', example: true }
+          }
+        },
+        Transaction: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            wallet_id: { type: 'string', format: 'uuid' },
+            amount: { type: 'number', example: 25.00 },
+            type: {
+              type: 'string',
+              enum: ['deposit', 'withdrawal', 'meal_payment', 'event_payment', 'refund']
+            },
+            description: { type: 'string' },
+            reference_id: { type: 'string', format: 'uuid' },
+            reference_type: { type: 'string', example: 'meal_reservation' },
+            status: { type: 'string', enum: ['pending', 'completed', 'failed'] },
+            transaction_date: { type: 'string', format: 'date-time' }
+          }
+        },
+        MealMenu: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            cafeteria_id: { type: 'string', format: 'uuid' },
+            date: { type: 'string', format: 'date', example: '2024-01-15' },
+            type: { type: 'string', enum: ['breakfast', 'lunch', 'dinner'] },
+            items: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', example: 'Grilled Chicken' },
+                  category: { type: 'string', example: 'main' }
+                }
+              }
+            },
+            price: { type: 'number', example: 25.00 },
+            is_published: { type: 'boolean' },
+            max_reservations: { type: 'integer' }
+          }
+        },
+        MealReservation: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            qr_code: { type: 'string', example: 'MEAL-ABC123XYZ' },
+            status: { type: 'string', enum: ['reserved', 'consumed', 'cancelled', 'no_show'] },
+            reservation_time: { type: 'string', format: 'date-time' },
+            consumed_at: { type: 'string', format: 'date-time', nullable: true }
+          }
+        },
+        Event: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            title: { type: 'string', example: 'AI Workshop' },
+            description: { type: 'string' },
+            date: { type: 'string', format: 'date-time' },
+            end_date: { type: 'string', format: 'date-time', nullable: true },
+            location: { type: 'string', example: 'Conference Hall A' },
+            category: { type: 'string' },
+            capacity: { type: 'integer', example: 100 },
+            registered_count: { type: 'integer', example: 45 },
+            is_paid: { type: 'boolean' },
+            price: { type: 'number', example: 50.00 },
+            currency: { type: 'string', example: 'TRY' },
+            image_url: { type: 'string', nullable: true }
+          }
+        },
+        EventRegistration: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            status: { type: 'string', enum: ['registered', 'waitlisted', 'cancelled', 'attended'] },
+            qr_code: { type: 'string', example: 'EVT-ABC123XYZ' },
+            checked_in: { type: 'boolean' },
+            check_in_time: { type: 'string', format: 'date-time', nullable: true },
+            payment_status: { type: 'string', enum: ['not_required', 'pending', 'completed', 'refunded'] }
+          }
+        },
+        Schedule: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            section_id: { type: 'string', format: 'uuid' },
+            classroom_id: { type: 'string', format: 'uuid' },
+            day_of_week: { type: 'string', enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] },
+            start_time: { type: 'string', format: 'time', example: '09:00' },
+            end_time: { type: 'string', format: 'time', example: '09:50' }
+          }
+        },
+        ClassroomReservation: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            classroom_id: { type: 'string', format: 'uuid' },
+            user_id: { type: 'string', format: 'uuid' },
+            title: { type: 'string', example: 'Study Group Meeting' },
+            purpose: { type: 'string', enum: ['class', 'meeting', 'event', 'study', 'exam', 'other'] },
+            date: { type: 'string', format: 'date' },
+            start_time: { type: 'string', format: 'time' },
+            end_time: { type: 'string', format: 'time' },
+            status: { type: 'string', enum: ['pending', 'approved', 'rejected', 'cancelled'] }
+          }
+        },
+        ScheduleGenerationResult: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            statistics: {
+              type: 'object',
+              properties: {
+                total_sections: { type: 'integer' },
+                scheduled_sections: { type: 'integer' },
+                unscheduled_sections: { type: 'integer' },
+                backtrack_count: { type: 'integer' },
+                duration_ms: { type: 'integer' }
+              }
+            },
+            assignments: { type: 'array', items: { type: 'object' } },
+            unassigned: { type: 'array', items: { type: 'object' } }
+          }
         }
       },
       responses: {
@@ -213,6 +341,30 @@ const options = {
               }
             }
           }
+        },
+        InsufficientBalance: {
+          description: 'Wallet balance is insufficient',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Error' },
+              example: {
+                success: false,
+                error: { code: 'INSUFFICIENT_BALANCE', message: 'Insufficient wallet balance' }
+              }
+            }
+          }
+        },
+        ConflictError: {
+          description: 'Resource conflict (e.g., schedule or reservation overlap)',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/Error' },
+              example: {
+                success: false,
+                error: { code: 'SCHEDULE_CONFLICT', message: 'Classroom is already booked at this time' }
+              }
+            }
+          }
         }
       }
     },
@@ -252,6 +404,27 @@ const options = {
       {
         name: 'Departments',
         description: 'Academic department endpoints'
+      },
+      // Part 3 Tags
+      {
+        name: 'Wallet',
+        description: 'Wallet management and payment operations'
+      },
+      {
+        name: 'Meals',
+        description: 'Meal reservation and menu management'
+      },
+      {
+        name: 'Events',
+        description: 'Event management and registration'
+      },
+      {
+        name: 'Scheduling',
+        description: 'Automatic course scheduling using CSP algorithm'
+      },
+      {
+        name: 'Reservations',
+        description: 'Classroom reservation management'
       }
     ]
   },

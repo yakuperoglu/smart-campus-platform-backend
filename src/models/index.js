@@ -31,6 +31,10 @@ const Notification = require('./Notification');
 const IoTSensor = require('./IoTSensor');
 const SensorData = require('./SensorData');
 
+// Part 3: Course Scheduling & Resource Management
+const Schedule = require('./Schedule');
+const ClassroomReservation = require('./ClassroomReservation');
+
 // ============================================
 // DEFINE ALL ASSOCIATIONS (RELATIONSHIPS)
 // ============================================
@@ -404,13 +408,94 @@ SensorData.belongsTo(IoTSensor, {
   as: 'sensor'
 });
 
+// -------------------- Schedule Relations (Part 3) --------------------
+// CourseSection -> Schedule (One-to-Many)
+CourseSection.hasMany(Schedule, {
+  foreignKey: 'section_id',
+  as: 'schedules',
+  onDelete: 'CASCADE'
+});
+Schedule.belongsTo(CourseSection, {
+  foreignKey: 'section_id',
+  as: 'section'
+});
+
+// Classroom -> Schedule (One-to-Many)
+Classroom.hasMany(Schedule, {
+  foreignKey: 'classroom_id',
+  as: 'schedules',
+  onDelete: 'SET NULL'
+});
+Schedule.belongsTo(Classroom, {
+  foreignKey: 'classroom_id',
+  as: 'classroom'
+});
+
+// -------------------- Classroom Reservation Relations (Part 3) --------------------
+// Classroom -> ClassroomReservation (One-to-Many)
+Classroom.hasMany(ClassroomReservation, {
+  foreignKey: 'classroom_id',
+  as: 'reservations',
+  onDelete: 'CASCADE'
+});
+ClassroomReservation.belongsTo(Classroom, {
+  foreignKey: 'classroom_id',
+  as: 'classroom'
+});
+
+// User -> ClassroomReservation (One-to-Many) - as requester
+User.hasMany(ClassroomReservation, {
+  foreignKey: 'user_id',
+  as: 'classroomReservations',
+  onDelete: 'CASCADE'
+});
+ClassroomReservation.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+// User -> ClassroomReservation (One-to-Many) - as approver
+User.hasMany(ClassroomReservation, {
+  foreignKey: 'approved_by',
+  as: 'approvedReservations',
+  onDelete: 'SET NULL'
+});
+ClassroomReservation.belongsTo(User, {
+  foreignKey: 'approved_by',
+  as: 'approver'
+});
+
+// -------------------- Meal Reservation - Cafeteria Relations (Part 3) --------------------
+// Cafeteria -> MealReservation (One-to-Many)
+Cafeteria.hasMany(MealReservation, {
+  foreignKey: 'cafeteria_id',
+  as: 'reservations',
+  onDelete: 'SET NULL'
+});
+MealReservation.belongsTo(Cafeteria, {
+  foreignKey: 'cafeteria_id',
+  as: 'cafeteria'
+});
+
+// -------------------- Event Registration - Transaction Relations (Part 3) --------------------
+// Transaction -> EventRegistration (One-to-One for payment)
+Transaction.hasOne(EventRegistration, {
+  foreignKey: 'transaction_id',
+  as: 'eventRegistration',
+  onDelete: 'SET NULL'
+});
+EventRegistration.belongsTo(Transaction, {
+  foreignKey: 'transaction_id',
+  as: 'paymentTransaction'
+});
+
 // ============================================
 // EXPORT ALL MODELS AND SEQUELIZE INSTANCE
 // ============================================
 
 module.exports = {
   sequelize,
-  
+
   // User & Auth
   User,
   Department,
@@ -419,19 +504,19 @@ module.exports = {
   Admin,
   EmailVerification,
   PasswordReset,
-  
+
   // Academic
   Course,
   CoursePrerequisite,
   Classroom,
   CourseSection,
   Enrollment,
-  
+
   // Attendance
   AttendanceSession,
   AttendanceRecord,
   ExcuseRequest,
-  
+
   // Life on Campus
   Cafeteria,
   MealMenu,
@@ -440,9 +525,13 @@ module.exports = {
   MealReservation,
   Event,
   EventRegistration,
-  
+
   // Extras
   Notification,
   IoTSensor,
-  SensorData
+  SensorData,
+
+  // Part 3: Scheduling & Reservations
+  Schedule,
+  ClassroomReservation
 };

@@ -45,6 +45,22 @@ const Classroom = sequelize.define('Classroom', {
     allowNull: true,
     defaultValue: {},
     comment: 'Features like projector, smartboard, AC, etc.'
+  },
+  is_active: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+    comment: 'Whether this classroom is available for scheduling'
+  },
+  floor: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Floor number in the building'
+  },
+  classroom_type: {
+    type: DataTypes.ENUM('lecture_hall', 'lab', 'seminar', 'computer_lab', 'auditorium', 'other'),
+    allowNull: false,
+    defaultValue: 'lecture_hall'
   }
 }, {
   tableName: 'classrooms',
