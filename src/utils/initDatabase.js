@@ -9,7 +9,6 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const syncDatabase = require('./dbSync');
-const seedDatabase = require('./seedDatabase');
 
 /**
  * Initialize database with sync and seed
@@ -25,7 +24,7 @@ async function initDatabase() {
 
     // Check if database is already initialized
     const { sequelize } = require('../models');
-    
+
     try {
       // Try to query existing tables
       const [results] = await sequelize.query(`
@@ -35,9 +34,9 @@ async function initDatabase() {
         AND table_type = 'BASE TABLE'
         AND table_name IN ('users', 'departments', 'students', 'faculty', 'courses')
       `);
-      
+
       const tableCount = parseInt(results[0].table_count);
-      
+
       if (tableCount >= 5) {
         console.log('✅ Database is already initialized.');
         console.log(`   Found ${tableCount} core tables.`);
@@ -45,10 +44,10 @@ async function initDatabase() {
         console.log('');
         return true;
       }
-      
+
       console.log(`ℹ️  Found ${tableCount} core tables. Full initialization needed.`);
       console.log('');
-      
+
     } catch (queryError) {
       console.log('ℹ️  Database schema check failed. Proceeding with initialization...');
       console.log('');
@@ -58,27 +57,13 @@ async function initDatabase() {
     console.log('🔄 Starting database synchronization...');
     console.log('⚠️  Using safe mode: existing tables will NOT be dropped.');
     await syncDatabase({ force: false, alter: false });
-    
-    // Check if we need to seed
-    const [userCount] = await sequelize.query('SELECT COUNT(*) as count FROM users;');
-    const usersExist = parseInt(userCount[0].count) > 0;
-    
-    if (usersExist) {
-      console.log('');
-      console.log('ℹ️  Database already contains data. Skipping seed to prevent duplicates.');
-      console.log('');
-    } else {
-      // Seed database (adds initial data)
-      console.log('');
-      console.log('📊 Database is empty. Starting seeding...');
-      await seedDatabase();
-    }
-    
-    console.log('✅ Database initialization completed successfully.');
+
     console.log('');
-    
+    console.log('✅ Database schema sync completed successfully.');
+    console.log('');
+
     return true;
-    
+
   } catch (error) {
     console.error('❌ Database initialization failed:', error.message);
     console.error('');
@@ -99,7 +84,7 @@ async function initDatabase() {
 (async () => {
   try {
     const success = await initDatabase();
-    
+
     // Close database connection pool cleanly
     const { sequelize } = require('../models');
     console.log('🔌 Closing database connection pool...');
@@ -107,12 +92,12 @@ async function initDatabase() {
     console.log('✅ Connection pool closed.');
     console.log('💡 Application will create a new connection pool on startup.');
     console.log('');
-    
+
     // Give time for all pending operations to complete
     setTimeout(() => {
       process.exit(0);
     }, 1000);
-    
+
   } catch (error) {
     console.error('❌ Unexpected error during initialization:', error);
     // Still exit with 0 to allow container to start

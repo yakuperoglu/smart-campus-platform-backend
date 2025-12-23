@@ -1,9 +1,23 @@
 const { Sequelize } = require('sequelize');
 
+// Environment variables'dan DB bilgilerini al
+const dbHost = process.env.DB_HOST;
+const dbPort = process.env.DB_PORT;
+const dbName = process.env.DB_NAME;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+
+// Gerekli değişkenlerin varlığını kontrol et
+if (!dbHost || !dbName || !dbUser || !dbPassword) {
+  console.error('❌ Missing required database environment variables!');
+  console.error('   Required: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
+  console.error('   Please check your .env file.');
+  process.exit(1);
+}
+
 // SSL ayarlarını veritabanı host'una göre belirle
 // Yerel container (postgres) veya localhost için SSL gerekmiyor
 // Render, AWS RDS gibi uzak veritabanları için SSL gerekli
-const dbHost = process.env.DB_HOST || 'dpg-d4s4t0p5pdvs73bvmip0-a.frankfurt-postgres.render.com';
 const isLocalDB = dbHost === 'postgres' || dbHost === 'localhost' || dbHost === '127.0.0.1';
 
 const dialectOptions = {};
@@ -17,17 +31,17 @@ if (!isLocalDB) {
 
 console.log('🔗 Database Connection Config:');
 console.log(`   Host: ${dbHost}`);
-console.log(`   Port: ${process.env.DB_PORT || 5432}`);
-console.log(`   Database: ${process.env.DB_NAME || 'smartcampusedb'}`);
+console.log(`   Port: ${dbPort}`);
+console.log(`   Database: ${dbName}`);
 console.log(`   SSL: ${!isLocalDB ? 'Enabled' : 'Disabled'}`);
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'smartcampusedb',
-  process.env.DB_USER || 'yaqp',
-  process.env.DB_PASSWORD || 'I6slTyhtol4CSZpH4PzNZ7NvxycDsyUb',
+  dbName,
+  dbUser,
+  dbPassword,
   {
     host: dbHost,
-    port: process.env.DB_PORT || 5432,
+    port: dbPort,
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     dialectOptions,

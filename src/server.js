@@ -32,21 +32,13 @@ const startServer = async () => {
                 const tableCount = parseInt(results[0].table_count);
 
                 if (tableCount < 5) {
-                    console.log(`ℹ️  Found ${tableCount}/5 core tables. Initializing database...`);
+                    console.log(`ℹ️  Found ${tableCount}/5 core tables. Syncing database schema...`);
 
-                    // Import and run database initialization
+                    // Import and run database sync (schema only, no seeding)
                     const syncDatabase = require('./utils/dbSync');
                     await syncDatabase({ force: false, alter: false });
 
-                    // Check if we need to seed
-                    const [userCount] = await sequelize.query('SELECT COUNT(*) as count FROM users;');
-                    if (parseInt(userCount[0].count) === 0) {
-                        console.log('📊 Seeding database with initial data...');
-                        const seedDatabase = require('./utils/seedDatabase');
-                        await seedDatabase();
-                    }
-
-                    console.log('✅ Database initialization completed.');
+                    console.log('✅ Database schema sync completed.');
                 } else {
                     console.log(`✅ Database already initialized (${tableCount}/5 core tables found).`);
                 }
