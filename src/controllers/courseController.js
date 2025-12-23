@@ -45,12 +45,12 @@ const getCourses = async (req, res, next) => {
             ];
         }
 
-        // Build section filter
+        // Build section filter (only if values are provided and not empty)
         const sectionWhere = {};
-        if (semester) {
+        if (semester && semester.trim() !== '') {
             sectionWhere.semester = semester;
         }
-        if (year) {
+        if (year && year.toString().trim() !== '') {
             sectionWhere.year = parseInt(year);
         }
 
@@ -153,8 +153,9 @@ const getCourses = async (req, res, next) => {
             }))
         }));
 
-        // Filter out courses with no sections if semester/year filter is applied
-        const filteredCourses = (semester || year)
+        // Filter out courses with no sections if semester/year filter is applied (and not empty)
+        const hasActiveFilters = (semester && semester.trim() !== '') || (year && year.toString().trim() !== '');
+        const filteredCourses = hasActiveFilters
             ? formattedCourses.filter(c => c.sections.length > 0)
             : formattedCourses;
 
