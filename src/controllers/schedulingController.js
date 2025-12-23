@@ -153,9 +153,30 @@ const getSchedulingInfo = async (req, res, next) => {
     }
 };
 
+/**
+ * Export schedule to iCal
+ * GET /api/scheduling/my-schedule/ical
+ */
+const exportScheduleToIcal = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const icalString = await SchedulingService.exportToIcal(userId);
+
+        res.set({
+            'Content-Type': 'text/calendar; charset=utf-8',
+            'Content-Disposition': 'attachment; filename="course-schedule.ics"'
+        });
+
+        res.send(icalString);
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     generateSchedule,
     getSchedule,
     clearSchedule,
-    getSchedulingInfo
+    getSchedulingInfo,
+    exportScheduleToIcal
 };

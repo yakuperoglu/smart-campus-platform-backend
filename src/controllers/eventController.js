@@ -218,6 +218,72 @@ const deleteEvent = async (req, res, next) => {
     }
 };
 
+// Exports moved to the end of the file
+
+// ==================== Survey Endpoints ====================
+
+/**
+ * Create a survey (Organizer/Admin)
+ * POST /api/events/:id/survey
+ */
+const createSurvey = async (req, res, next) => {
+    try {
+        const eventId = req.params.id;
+        const organizerId = req.user.id;
+        // Optional: Check if user is organizer of this event
+
+        const result = await EventService.createSurvey(eventId, req.body);
+        res.status(201).json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get survey for an event
+ * GET /api/events/:id/survey
+ */
+const getSurvey = async (req, res, next) => {
+    try {
+        const eventId = req.params.id;
+        const result = await EventService.getSurvey(eventId);
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Submit survey response
+ * POST /api/events/:id/survey/response
+ */
+const submitSurvey = async (req, res, next) => {
+    try {
+        const eventId = req.params.id;
+        const userId = req.user.id;
+        const result = await EventService.submitSurveyResponse(userId, eventId, req.body.responses);
+        res.status(201).json({ success: true, message: 'Survey submitted successfully', data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get survey results (Organizer/Admin)
+ * GET /api/events/:id/survey/results
+ */
+const getSurveyResults = async (req, res, next) => {
+    try {
+        const eventId = req.params.id;
+        // Optional: Check permissions
+
+        const result = await EventService.getSurveyResults(eventId);
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     registerForEvent,
     checkInEvent,
@@ -227,5 +293,11 @@ module.exports = {
     getEventById,
     createEvent,
     updateEvent,
-    deleteEvent
+    deleteEvent,
+
+    // Survey Endpoints
+    createSurvey,
+    getSurvey,
+    submitSurvey,
+    getSurveyResults
 };

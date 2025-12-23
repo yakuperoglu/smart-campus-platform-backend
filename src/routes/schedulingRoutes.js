@@ -189,4 +189,23 @@ router.post('/generate', verifyToken, adminOnly, schedulingController.generateSc
  */
 router.delete('/schedule', verifyToken, adminOnly, schedulingController.clearSchedule);
 
+/**
+ * @swagger
+ * /scheduling/my-schedule/ical:
+ *   get:
+ *     summary: Export my schedule to iCal (.ics)
+ *     tags: [Scheduling]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: iCal file download
+ *         content:
+ *           text/calendar:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get('/my-schedule/ical', verifyToken, schedulingController.exportScheduleToIcal);
+
 module.exports = router;
