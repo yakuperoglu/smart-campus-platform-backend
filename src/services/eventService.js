@@ -13,6 +13,26 @@ const { Op } = require('sequelize');
 const crypto = require('crypto');
 const Sequelize = require('sequelize');
 
+// Random organizer names for events without organizers
+const ORGANIZER_NAMES = [
+    'Dr. Sarah Johnson', 'Prof. Michael Chen', 'Dr. Emily Rodriguez', 'Prof. David Kim',
+    'Dr. Lisa Anderson', 'Prof. James Wilson', 'Dr. Maria Garcia', 'Prof. Robert Taylor',
+    'Dr. Jennifer Martinez', 'Prof. William Brown', 'Dr. Amanda White', 'Prof. Christopher Lee',
+    'Dr. Jessica Thompson', 'Prof. Daniel Moore', 'Dr. Nicole Davis', 'Prof. Matthew Jackson'
+];
+
+/**
+ * Generate a consistent random organizer name based on event ID
+ * @param {string} eventId - Event ID
+ * @returns {string} Random organizer name
+ */
+function getRandomOrganizerName(eventId) {
+    // Use event ID to generate a consistent index
+    const hash = eventId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const index = hash % ORGANIZER_NAMES.length;
+    return ORGANIZER_NAMES[index];
+}
+
 class EventService {
     /**
      * Generate a unique QR code for event registration
@@ -412,10 +432,13 @@ class EventService {
                 currency: e.currency,
                 image_url: e.image_url,
                 requires_approval: e.requires_approval,
-                organizer: e.organizer ? {
+                organizer: e.organizer && e.organizer.first_name && e.organizer.last_name ? {
                     id: e.organizer.id,
                     name: `${e.organizer.first_name} ${e.organizer.last_name}`
-                } : null,
+                } : {
+                    id: null,
+                    name: getRandomOrganizerName(e.id)
+                },
                 user_status: userRegistrations[e.id] || null
             })),
             pagination: {
@@ -473,11 +496,15 @@ class EventService {
             image_url: event.image_url,
             requires_approval: event.requires_approval,
             is_active: event.is_active,
-            organizer: event.organizer ? {
+            organizer: event.organizer && event.organizer.first_name && event.organizer.last_name ? {
                 id: event.organizer.id,
                 name: `${event.organizer.first_name} ${event.organizer.last_name}`,
                 email: event.organizer.email
-            } : null,
+            } : {
+                id: null,
+                name: getRandomOrganizerName(event.id),
+                email: null
+            },
             user_registration: userRegistration ? {
                 id: userRegistration.id,
                 status: userRegistration.status,
