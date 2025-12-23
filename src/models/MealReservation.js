@@ -24,6 +24,15 @@ const MealReservation = sequelize.define('MealReservation', {
       key: 'id'
     }
   },
+  cafeteria_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'cafeterias',
+      key: 'id'
+    },
+    comment: 'Direct reference to cafeteria for easier queries'
+  },
   status: {
     type: DataTypes.ENUM('reserved', 'confirmed', 'consumed', 'cancelled', 'no_show'),
     allowNull: false,

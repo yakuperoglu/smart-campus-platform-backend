@@ -47,6 +47,26 @@ const Student = sequelize.define('Student', {
       min: 0.00,
       max: 4.00
     }
+  },
+  has_scholarship: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'Whether student has meal scholarship (free meals)'
+  },
+  meal_quota_daily: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 2,
+    comment: 'Maximum free meals per day for scholarship students'
+  },
+  enrollment_year: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 2000,
+      max: 2100
+    }
   }
 }, {
   tableName: 'students',

@@ -40,6 +40,20 @@ const MealMenu = sequelize.define('MealMenu', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true,
     defaultValue: 0.00
+  },
+  is_published: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'Whether this menu is visible to users'
+  },
+  max_reservations: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    validate: {
+      min: 1
+    },
+    comment: 'Maximum number of reservations for this menu'
   }
 }, {
   tableName: 'meal_menus',

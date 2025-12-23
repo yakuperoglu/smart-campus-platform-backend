@@ -15,6 +15,12 @@ const sectionRoutes = require('./sectionRoutes');
 const gradesRoutes = require('./gradesRoutes');
 const attendanceRoutes = require('./attendanceRoutes');
 const excuseRoutes = require('./excuseRoutes');
+const walletRoutes = require('./walletRoutes');
+const mealRoutes = require('./mealRoutes');
+const eventRoutes = require('./eventRoutes');
+const schedulingRoutes = require('./schedulingRoutes');
+const reservationRoutes = require('./reservationRoutes');
+const notificationRoutes = require('./notificationRoutes');
 
 /**
  * Mount all routes
@@ -28,6 +34,12 @@ router.use('/sections', sectionRoutes);
 router.use('/grades', gradesRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/excuses', excuseRoutes);
+router.use('/wallet', walletRoutes);
+router.use('/meals', mealRoutes);
+router.use('/events', eventRoutes);
+router.use('/scheduling', schedulingRoutes);
+router.use('/reservations', reservationRoutes);
+router.use('/notifications', notificationRoutes);
 
 /**
  * Health check endpoint
