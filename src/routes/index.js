@@ -20,6 +20,7 @@ const mealRoutes = require('./mealRoutes');
 const eventRoutes = require('./eventRoutes');
 const schedulingRoutes = require('./schedulingRoutes');
 const reservationRoutes = require('./reservationRoutes');
+const notificationRoutes = require('./notificationRoutes');
 
 /**
  * Mount all routes
@@ -38,6 +39,7 @@ router.use('/meals', mealRoutes);
 router.use('/events', eventRoutes);
 router.use('/scheduling', schedulingRoutes);
 router.use('/reservations', reservationRoutes);
+router.use('/notifications', notificationRoutes);
 
 /**
  * Health check endpoint

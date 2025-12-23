@@ -10,6 +10,7 @@ const WalletService = require('./walletService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const crypto = require('crypto');
+const Sequelize = require('sequelize');
 
 class MealService {
     /**
@@ -32,7 +33,7 @@ class MealService {
      */
     static async createReservation(userId, menuId) {
         const t = await sequelize.transaction({
-            isolationLevel: sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+            isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
         });
 
         try {

@@ -65,6 +65,8 @@ const canManageEvents = (req, res, next) => {
  */
 router.get('/', optionalAuth, eventController.getEvents);
 
+router.get('/registrations', verifyToken, eventController.getMyRegistrations);
+
 /**
  * @swagger
  * /events/{id}:
@@ -82,28 +84,6 @@ router.get('/', optionalAuth, eventController.getEvents);
  *         description: Event details
  */
 router.get('/:id', optionalAuth, eventController.getEventById);
-
-// ==================== User Registration Routes ====================
-
-/**
- * @swagger
- * /events/registrations:
- *   get:
- *     summary: Get user's event registrations
- *     tags: [Events]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [registered, waitlisted, cancelled, attended]
- *     responses:
- *       200:
- *         description: List of user's registrations
- */
-router.get('/registrations', verifyToken, eventController.getMyRegistrations);
 
 /**
  * @swagger
@@ -284,5 +264,88 @@ router.put('/:id', verifyToken, canManageEvents, eventController.updateEvent);
  *         description: Event deleted
  */
 router.delete('/:id', verifyToken, canManageEvents, eventController.deleteEvent);
+
+/**
+ * @swagger
+ * /events/{id}/survey:
+ *   post:
+ *     summary: Create a survey for an event (admin/staff/faculty only)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - form_schema
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               form_schema:
+ *                 type: array
+ *     responses:
+ *       201:
+ *         description: Survey created
+ */
+router.post('/:id/survey', verifyToken, canManageEvents, eventController.createSurvey);
+
+/**
+ * @swagger
+ * /events/{id}/survey:
+ *   get:
+ *     summary: Get survey for an event
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Survey details
+ */
+router.get('/:id/survey', verifyToken, eventController.getSurvey);
+
+/**
+ * @swagger
+ * /events/{id}/survey/response:
+ *   post:
+ *     summary: Submit survey response
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - responses
+ *             properties:
+ *               responses:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Survey submitted
+ */
+router.post('/:id/survey/response', verifyToken, eventController.submitSurvey);
+
+/**
+ * @swagger
+ * /events/{id}/survey/results:
+ *   get:
+ *     summary: Get survey results (admin/staff/faculty only)
+ *     tags: [Events]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Survey results
+ */
+router.get('/:id/survey/results', verifyToken, canManageEvents, eventController.getSurveyResults);
 
 module.exports = router;

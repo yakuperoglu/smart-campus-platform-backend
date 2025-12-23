@@ -29,7 +29,7 @@ const Transaction = sequelize.define('Transaction', {
     allowNull: true
   },
   reference_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.STRING(255),
     allowNull: true,
     comment: 'Reference to related entity (meal_reservation, event_registration, etc.)'
   },

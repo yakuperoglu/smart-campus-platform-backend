@@ -35,6 +35,10 @@ const SensorData = require('./SensorData');
 const Schedule = require('./Schedule');
 const ClassroomReservation = require('./ClassroomReservation');
 
+// Part 3: Event Surveys
+const EventSurvey = require('./EventSurvey');
+const SurveyResponse = require('./SurveyResponse');
+
 // ============================================
 // DEFINE ALL ASSOCIATIONS (RELATIONSHIPS)
 // ============================================
@@ -396,6 +400,39 @@ EventRegistration.belongsTo(Event, {
   as: 'event'
 });
 
+// Event -> EventSurvey (One-to-One)
+Event.hasOne(EventSurvey, {
+  foreignKey: 'event_id',
+  as: 'survey',
+  onDelete: 'CASCADE'
+});
+EventSurvey.belongsTo(Event, {
+  foreignKey: 'event_id',
+  as: 'event'
+});
+
+// EventSurvey -> SurveyResponse (One-to-Many)
+EventSurvey.hasMany(SurveyResponse, {
+  foreignKey: 'survey_id',
+  as: 'responses',
+  onDelete: 'CASCADE'
+});
+SurveyResponse.belongsTo(EventSurvey, {
+  foreignKey: 'survey_id',
+  as: 'survey'
+});
+
+// User -> SurveyResponse (One-to-Many)
+User.hasMany(SurveyResponse, {
+  foreignKey: 'user_id',
+  as: 'surveyResponses',
+  onDelete: 'SET NULL'
+});
+SurveyResponse.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
 // -------------------- IoT Sensor Relations --------------------
 // IoTSensor -> SensorData (One-to-Many)
 IoTSensor.hasMany(SensorData, {
@@ -533,5 +570,9 @@ module.exports = {
 
   // Part 3: Scheduling & Reservations
   Schedule,
-  ClassroomReservation
+  ClassroomReservation,
+
+  // Part 3: Event Surveys
+  EventSurvey,
+  SurveyResponse
 };

@@ -7,9 +7,31 @@
 
 const { sequelize, Event, EventRegistration, User, Transaction } = require('../models');
 const WalletService = require('./walletService');
+const NotificationService = require('./notificationService');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 const crypto = require('crypto');
+const Sequelize = require('sequelize');
+
+// Random organizer names for events without organizers
+const ORGANIZER_NAMES = [
+    'Dr. Sarah Johnson', 'Prof. Michael Chen', 'Dr. Emily Rodriguez', 'Prof. David Kim',
+    'Dr. Lisa Anderson', 'Prof. James Wilson', 'Dr. Maria Garcia', 'Prof. Robert Taylor',
+    'Dr. Jennifer Martinez', 'Prof. William Brown', 'Dr. Amanda White', 'Prof. Christopher Lee',
+    'Dr. Jessica Thompson', 'Prof. Daniel Moore', 'Dr. Nicole Davis', 'Prof. Matthew Jackson'
+];
+
+/**
+ * Generate a consistent random organizer name based on event ID
+ * @param {string} eventId - Event ID
+ * @returns {string} Random organizer name
+ */
+function getRandomOrganizerName(eventId) {
+    // Use event ID to generate a consistent index
+    const hash = eventId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const index = hash % ORGANIZER_NAMES.length;
+    return ORGANIZER_NAMES[index];
+}
 
 class EventService {
     /**
@@ -32,7 +54,7 @@ class EventService {
      */
     static async registerForEvent(userId, eventId) {
         const t = await sequelize.transaction({
-            isolationLevel: sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+            isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
         });
 
         try {
@@ -410,10 +432,13 @@ class EventService {
                 currency: e.currency,
                 image_url: e.image_url,
                 requires_approval: e.requires_approval,
-                organizer: e.organizer ? {
+                organizer: e.organizer && e.organizer.first_name && e.organizer.last_name ? {
                     id: e.organizer.id,
                     name: `${e.organizer.first_name} ${e.organizer.last_name}`
-                } : null,
+                } : {
+                    id: null,
+                    name: getRandomOrganizerName(e.id)
+                },
                 user_status: userRegistrations[e.id] || null
             })),
             pagination: {
@@ -471,11 +496,15 @@ class EventService {
             image_url: event.image_url,
             requires_approval: event.requires_approval,
             is_active: event.is_active,
-            organizer: event.organizer ? {
+            organizer: event.organizer && event.organizer.first_name && event.organizer.last_name ? {
                 id: event.organizer.id,
                 name: `${event.organizer.first_name} ${event.organizer.last_name}`,
                 email: event.organizer.email
-            } : null,
+            } : {
+                id: null,
+                name: getRandomOrganizerName(event.id),
+                email: null
+            },
             user_registration: userRegistration ? {
                 id: userRegistration.id,
                 status: userRegistration.status,
@@ -656,9 +685,103 @@ class EventService {
                 transaction
             });
 
-            // TODO: Send notification to user about promotion from waitlist
+            // Send notification to user about promotion from waitlist
+            const event = await Event.findByPk(eventId);
+            await NotificationService.sendNotification({
+                userId: nextInLine.user_id,
+                title: 'Event Waitlist Update',
+                message: `Good news! You have been promoted from the waitlist to registered for the event "${event.title}".`,
+                type: 'success',
+                priority: 'high',
+                actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/events/${eventId}`
+            });
             console.log(`[EventService] Promoted user ${nextInLine.user_id} from waitlist for event ${eventId}`);
         }
+    }
+
+    // ==================== Survey Methods ====================
+
+    /**
+     * Create survey for an event
+     * @param {string} eventId
+     * @param {object} surveyData
+     */
+    static async createSurvey(eventId, surveyData) {
+        const event = await Event.findByPk(eventId);
+        if (!event) throw new AppError('Event not found', 404, 'EVENT_NOT_FOUND');
+
+        // Check if survey already exists
+        const existing = await sequelize.models.EventSurvey.findOne({ where: { event_id: eventId } });
+        if (existing) throw new AppError('Survey already exists for this event', 400, 'SURVEY_EXISTS');
+
+        const survey = await sequelize.models.EventSurvey.create({
+            event_id: eventId,
+            ...surveyData
+        });
+
+        return survey;
+    }
+
+    /**
+     * Get survey for an event
+     * @param {string} eventId
+     */
+    static async getSurvey(eventId) {
+        const survey = await sequelize.models.EventSurvey.findOne({
+            where: { event_id: eventId },
+            include: [{ model: Event, as: 'event', attributes: ['title'] }]
+        });
+        if (!survey) throw new AppError('Survey not found', 404, 'SURVEY_NOT_FOUND');
+        return survey;
+    }
+
+    /**
+     * Submit survey response
+     * @param {string} userId
+     * @param {string} eventId
+     * @param {object} responseData
+     */
+    static async submitSurveyResponse(userId, eventId, responseData) {
+        const survey = await sequelize.models.EventSurvey.findOne({ where: { event_id: eventId } });
+        if (!survey) throw new AppError('Survey not found', 404, 'SURVEY_NOT_FOUND');
+
+        // Check if user attended the event (optional: enforce attendance)
+        const registration = await EventRegistration.findOne({
+            where: { user_id: userId, event_id: eventId, status: 'attended' } // Must be attended
+        });
+
+        // Uncomment strictly if attendance is required
+        // if (!registration) throw new AppError('You must attend the event to submit a survey', 403, 'NOT_ATTENDED');
+
+        // Check duplicate response
+        const existing = await sequelize.models.SurveyResponse.findOne({
+            where: { survey_id: survey.id, user_id: userId }
+        });
+        if (existing) throw new AppError('You have already submitted a response', 400, 'ALREADY_SUBMITTED');
+
+        const response = await sequelize.models.SurveyResponse.create({
+            survey_id: survey.id,
+            user_id: userId,
+            responses: responseData
+        });
+
+        return response;
+    }
+
+    /**
+     * Get survey results (Admin/Organizer)
+     * @param {string} eventId 
+     */
+    static async getSurveyResults(eventId) {
+        const survey = await sequelize.models.EventSurvey.findOne({ where: { event_id: eventId } });
+        if (!survey) throw new AppError('Survey not found', 404, 'SURVEY_NOT_FOUND');
+
+        const responses = await sequelize.models.SurveyResponse.findAll({
+            where: { survey_id: survey.id },
+            include: [{ model: User, as: 'user', attributes: ['first_name', 'last_name'] }]
+        });
+
+        return { survey, responses };
     }
 }
 

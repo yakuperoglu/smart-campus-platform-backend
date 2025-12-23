@@ -18,6 +18,7 @@
 const { sequelize, CourseSection, Classroom, Course, Faculty, Enrollment, Schedule, Student } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
+const ical = require('ical-generator').default;
 
 // ==================== Time Slot Definitions ====================
 
@@ -197,6 +198,96 @@ class SchedulingService {
         });
 
         return { deleted_count: deleted };
+    }
+
+    /**
+     * Export user's schedule to iCal format
+     * @param {string} userId - User ID
+     * @returns {Promise<string>} iCal string
+     */
+    static async exportToIcal(userId) {
+        const user = await sequelize.models.User.findByPk(userId);
+        if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+
+        // Find student enrollment to get sections
+        const enrollments = await Enrollment.findAll({
+            where: {
+                student_id: userId,
+                status: 'enrolled'
+            },
+            include: [{
+                model: CourseSection,
+                as: 'section',
+                include: [
+                    { model: Course, as: 'course' },
+                    { model: Schedule, as: 'schedules', include: [{ model: Classroom, as: 'classroom' }] },
+                    { model: Faculty, as: 'instructor', include: [{ model: sequelize.models.User, as: 'user' }] }
+                ]
+            }]
+        });
+
+        const calendar = ical({
+            name: 'Smart Campus Course Schedule',
+            timezone: 'Europe/Istanbul'
+        });
+
+        const semesterStart = new Date('2024-09-16'); // Fall 2024-2025 start (approx)
+        const semesterEnd = new Date('2025-01-10');   // Fall 2024-2025 end (approx)
+
+        // Day mapping
+        const dayMap = {
+            'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 0
+        };
+
+        for (const enrollment of enrollments) {
+            const section = enrollment.section;
+            if (!section || !section.schedules || section.schedules.length === 0) continue;
+
+            const courseName = section.course?.name || 'Unknown Course';
+            const courseCode = section.course?.code || 'CODE';
+
+            for (const schedule of section.schedules) {
+                // Determine first occurrence of this class day
+                const targetDay = dayMap[schedule.day_of_week];
+                let firstDate = new Date(semesterStart);
+
+                // Find next occurrence of targetDay
+                while (firstDate.getDay() !== targetDay) {
+                    firstDate.setDate(firstDate.getDate() + 1);
+                }
+
+                // Parse time
+                const [startHour, startMin] = schedule.start_time.split(':').map(Number);
+                const [endHour, endMin] = schedule.end_time.split(':').map(Number);
+
+                const eventStart = new Date(firstDate);
+                eventStart.setHours(startHour, startMin, 0);
+
+                const eventEnd = new Date(firstDate);
+                eventEnd.setHours(endHour, endMin, 0);
+
+                const instructorName = section.instructor?.user ?
+                    `${section.instructor.user.first_name} ${section.instructor.user.last_name}` : 'TBA';
+
+                const location = schedule.classroom ?
+                    `${schedule.classroom.building} ${schedule.classroom.room_number}` : 'TBA';
+
+                calendar.createEvent({
+                    start: eventStart,
+                    end: eventEnd,
+                    summary: `${courseCode} - ${courseName}`,
+                    description: `Instructor: ${instructorName}\nSection: ${section.section_number}`,
+                    location: location,
+                    repeating: {
+                        freq: 'WEEKLY',
+                        until: semesterEnd
+                    },
+                    timezone: 'Europe/Istanbul'
+                });
+            }
+        }
+
+        return calendar.toString();
     }
 
     // ==================== Private Helper Methods ====================

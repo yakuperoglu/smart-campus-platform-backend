@@ -8,6 +8,7 @@
 const { sequelize, Wallet, Transaction, User } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
+const Sequelize = require('sequelize');
 
 class WalletService {
     /**
@@ -86,8 +87,9 @@ class WalletService {
 
         // Determine if we need to create a new transaction or use existing
         const useExternalTransaction = !!externalTransaction;
+        // Use Sequelize.Transaction containing constants
         const t = externalTransaction || await sequelize.transaction({
-            isolationLevel: sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
+            isolationLevel: Sequelize.Transaction.ISOLATION_LEVELS.SERIALIZABLE
         });
 
         try {

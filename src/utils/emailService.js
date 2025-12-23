@@ -16,22 +16,22 @@ const createTransporter = async () => {
   const emailPort = process.env.SMTP_PORT || process.env.EMAIL_PORT;
   const emailUser = process.env.SMTP_USER || process.env.EMAIL_USER;
   const emailPassword = process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
-  
-  console.log('📧 Email Config:', { 
-    host: emailHost, 
-    port: emailPort, 
+
+  console.log('📧 Email Config:', {
+    host: emailHost,
+    port: emailPort,
     user: emailUser ? emailUser.substring(0, 5) + '***' : 'NOT SET',
-    hasPassword: !!emailPassword 
+    hasPassword: !!emailPassword
   });
-  
+
   // Check if we have real SMTP credentials configured
-  const hasRealSMTP = emailHost && emailUser && emailPassword && 
-                      emailHost !== 'smtp.ethereal.email';
-  
+  const hasRealSMTP = emailHost && emailUser && emailPassword &&
+    emailHost !== 'smtp.ethereal.email';
+
   // For production or when real SMTP is configured, use provided credentials
   if (hasRealSMTP) {
     console.log(`📧 Using configured SMTP: ${emailHost}`);
-    
+
     // Gmail için özel ayarlar
     if (emailHost.includes('gmail')) {
       return nodemailer.createTransport({
@@ -42,7 +42,7 @@ const createTransporter = async () => {
         }
       });
     }
-    
+
     return nodemailer.createTransport({
       host: emailHost,
       port: parseInt(emailPort) || 587,
@@ -75,9 +75,9 @@ const createTransporter = async () => {
 const sendVerificationEmail = async (email, token) => {
   try {
     const transporter = await createTransporter();
-    
+
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/verify-email?token=${token}`;
-    
+
     const mailOptions = {
       from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
       to: email,
@@ -108,13 +108,13 @@ const sendVerificationEmail = async (email, token) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
+
     // Log preview URL in development
     if (process.env.NODE_ENV !== 'production') {
       console.log('📧 Verification email sent!');
       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     }
-    
+
     return info;
   } catch (error) {
     console.error('Error sending verification email:', error);
@@ -128,9 +128,9 @@ const sendVerificationEmail = async (email, token) => {
 const sendPasswordResetEmail = async (email, token) => {
   try {
     const transporter = await createTransporter();
-    
+
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/reset-password?token=${token}`;
-    
+
     const mailOptions = {
       from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
       to: email,
@@ -164,13 +164,13 @@ const sendPasswordResetEmail = async (email, token) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
+
     // Log preview URL in development
     if (process.env.NODE_ENV !== 'production') {
       console.log('📧 Password reset email sent!');
       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     }
-    
+
     return info;
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -184,7 +184,7 @@ const sendPasswordResetEmail = async (email, token) => {
 const sendWelcomeEmail = async (email, name) => {
   try {
     const transporter = await createTransporter();
-    
+
     const mailOptions = {
       from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
       to: email,
@@ -217,12 +217,12 @@ const sendWelcomeEmail = async (email, name) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    
+
     if (process.env.NODE_ENV !== 'production') {
       console.log('📧 Welcome email sent!');
       console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     }
-    
+
     return info;
   } catch (error) {
     console.error('Error sending welcome email:', error);
@@ -230,8 +230,36 @@ const sendWelcomeEmail = async (email, name) => {
   }
 };
 
+/**
+ * Send generic notification email
+ */
+const sendNotificationEmail = async (email, subject, htmlContent) => {
+  try {
+    const transporter = await createTransporter();
+
+    const mailOptions = {
+      from: `"Smart Campus Platform" <${process.env.SMTP_USER || process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@smartcampus.edu'}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('📧 Notification email sent!');
+      console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    }
+
+    return info;
+  } catch (error) {
+    console.error('Error sending notification email:', error);
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
-  sendWelcomeEmail
+  sendWelcomeEmail,
+  sendNotificationEmail
 };
