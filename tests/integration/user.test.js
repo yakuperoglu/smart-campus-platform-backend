@@ -8,7 +8,8 @@ jest.mock('../../src/middleware/authMiddleware', () => ({
         next();
     },
     optionalAuth: (req, res, next) => next(),
-    loadUserProfile: (req, res, next) => next()
+    loadUserProfile: (req, res, next) => next(),
+    isAdmin: (req, res, next) => next()
 }));
 
 // 2. Mock Models

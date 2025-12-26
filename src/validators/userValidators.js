@@ -77,6 +77,7 @@ const getUsersQuerySchema = {
     role: Joi.string()
       .valid('student', 'faculty', 'admin', 'staff')
       .optional()
+      .allow('')
       .messages({
         'any.only': 'Role must be one of: student, faculty, admin, staff'
       }),

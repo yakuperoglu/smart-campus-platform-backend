@@ -57,6 +57,18 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/excuses/admin/all
+ * @desc    Get ALL excuse requests
+ * @access  Private (Admin only)
+ */
+router.get(
+    '/admin/all',
+    verifyToken,
+    authorize('admin'),
+    excuseController.getAllExcuseRequests
+);
+
+/**
  * @route   PUT /api/v1/excuses/:id/status
  * @desc    Approve or reject excuse request
  * @access  Private (Faculty only)

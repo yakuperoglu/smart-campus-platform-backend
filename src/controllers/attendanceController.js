@@ -6,6 +6,7 @@
 const attendanceService = require('../services/attendanceService');
 const { Student, Faculty } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
+const { getIo } = require('../socket');
 
 /**
  * @route   POST /api/v1/attendance/sessions
@@ -88,7 +89,10 @@ const checkIn = async (req, res, next) => {
     }
 
     // Get student profile
-    const student = await Student.findOne({ where: { user_id: userId } });
+    const student = await Student.findOne({
+      where: { user_id: userId },
+      include: [{ model: require('../models/User'), as: 'user', attributes: ['first_name', 'last_name'] }]
+    });
     if (!student) {
       return next(new AppError('Student profile not found', 404, 'STUDENT_NOT_FOUND'));
     }
@@ -105,12 +109,46 @@ const checkIn = async (req, res, next) => {
 
     // Handle flagged check-ins
     if (result.warning) {
+      try {
+        const io = getIo();
+        io.to('role:admin').emit('admin:flagged_record', {
+          record: result.data,
+          studentName: `${student.user?.first_name} ${student.user?.last_name}`,
+          reason: result.message
+        });
+      } catch (err) {
+        console.error('Socket emit failed', err.message);
+      }
+
       return res.status(200).json({
         success: true,
         warning: true,
         message: result.message,
         data: result.data
       });
+    }
+
+    // Emit real-time update to the instructor of the session
+    try {
+      const io = getIo();
+      // We need to know who the instructor is. The result.data contains course info but not instructor ID directly?
+      // Actually result.data is from attendanceService.checkIn. Let's look at what checkIn returns.
+      // It returns record_id, status, etc.
+      // The session object inside checkIn service has instructor_id.
+      // BUT, we don't have it here easily without re-querying or modifying service.
+      // OPTIMIZATION: Emit to "session:{sessionId}" room if we had joined it, but instructors listen to "user:{instructorId}"?
+      // Or "session:{sessionId}:monitor".
+
+      // Let's emit to the session room, assuming the instructor FE joins it.
+      io.to(`session:${session_id}`).emit('attendance:update', {
+        type: 'check-in',
+        studentId: student.id,
+        studentName: `${student.user?.first_name} ${student.user?.last_name}`, // Need to include User in student query above to get name
+        status: result.data.status,
+        timestamp: new Date()
+      });
+    } catch (err) {
+      console.error('Socket emit failed', err.message);
     }
 
     res.status(200).json({

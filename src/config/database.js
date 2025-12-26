@@ -1,14 +1,22 @@
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
 // Environment variables'dan DB bilgilerini al
-const dbHost = process.env.DB_HOST;
-const dbPort = process.env.DB_PORT;
-const dbName = process.env.DB_NAME;
-const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASSWORD;
+// Environment variables'dan DB bilgilerini al
+let dbHost = process.env.DB_HOST;
+let dbPort = process.env.DB_PORT;
+let dbName = process.env.DB_NAME;
+let dbUser = process.env.DB_USER;
+let dbPassword = process.env.DB_PASSWORD;
 
-// Gerekli değişkenlerin varlığını kontrol et
-if (!dbHost || !dbName || !dbUser || !dbPassword) {
+// Force local safe defaults even if .env has remote values
+if (process.env.NODE_ENV === 'test') {
+  dbHost = 'localhost';
+  dbName = 'test_db';
+  dbUser = 'test_user';
+  dbPassword = 'test_password';
+  dbPort = process.env.DB_PORT || 5432;
+} else if (!dbHost || !dbName || !dbUser || !dbPassword) {
   console.error('❌ Missing required database environment variables!');
   console.error('   Required: DB_HOST, DB_NAME, DB_USER, DB_PASSWORD');
   console.error('   Please check your .env file.');

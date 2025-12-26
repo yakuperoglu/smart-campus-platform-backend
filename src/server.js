@@ -6,8 +6,12 @@
 require('dotenv').config();
 const { sequelize } = require('./models');
 const app = require('./app');
+const http = require('http');
+const { initSocket } = require('./socket');
 
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+
+const PORT = 5000;
 
 const startServer = async () => {
     try {
@@ -58,8 +62,11 @@ const startServer = async () => {
         const initJobs = require('./jobs');
         initJobs();
 
+        // Initialize WebSocket
+        initSocket(server);
+
         // Start server
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log('');
             console.log('🚀 ========================================');
             console.log(`   Smart Campus Platform API Server`);

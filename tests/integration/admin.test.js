@@ -7,7 +7,10 @@ jest.mock('../../src/middleware/authMiddleware', () => ({
     verifyToken: (req, res, next) => {
         req.user = { id: 'admin-id', role: 'admin' };
         next();
-    }
+    },
+    loadUserProfile: (req, res, next) => next(),
+    optionalAuth: (req, res, next) => next(),
+    isAdmin: (req, res, next) => next()
 }));
 
 jest.mock('../../src/middleware/roleMiddleware', () => ({
@@ -16,7 +19,11 @@ jest.mock('../../src/middleware/roleMiddleware', () => ({
             return res.status(403).json({ success: false, message: 'Access denied' });
         }
         next();
-    }
+    },
+    studentOnly: (req, res, next) => next(),
+    teacherOnly: (req, res, next) => next(),
+    authorize: (...roles) => (req, res, next) => next(),
+    facultyOrAdmin: (req, res, next) => next()
 }));
 
 // Mock Models
@@ -33,15 +40,28 @@ jest.mock('../../src/models', () => {
             findAndCountAll: jest.fn().mockResolvedValue({
                 count: 1,
                 rows: [
-                    { id: 'user-1', email: 'user@example.com', role: 'student' }
+                    {
+                        id: 'user-1',
+                        email: 'user@example.com',
+                        role: 'student',
+                        toJSON: function () {
+                            const { toJSON, ...rest } = this;
+                            return rest;
+                        }
+                    }
                 ]
             }),
             findByPk: jest.fn()
         },
-        Student: { findOne: jest.fn() },
-        Faculty: { findOne: jest.fn() },
-        Admin: { findOne: jest.fn() },
-        Department: { findByPk: jest.fn() }
+        Student: { findOne: jest.fn().mockResolvedValue(null) },
+        Faculty: { findOne: jest.fn().mockResolvedValue(null) },
+        Admin: { findOne: jest.fn().mockResolvedValue(null) },
+        Department: { findByPk: jest.fn() },
+        Wallet: { findOne: jest.fn().mockResolvedValue(null) },
+        NotificationPreference: { findOne: jest.fn().mockResolvedValue(null) },
+        Enrollment: { findOne: jest.fn(), findAll: jest.fn(), create: jest.fn() },
+        CourseSection: { findByPk: jest.fn(), update: jest.fn() },
+        Course: { findByPk: jest.fn() }
     };
 });
 
