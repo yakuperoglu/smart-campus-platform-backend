@@ -13,7 +13,7 @@ const {
   Cafeteria,
   Wallet,
   Enrollment,
-  Club
+  Club,
   MealMenu
 } = require('../models');
 
