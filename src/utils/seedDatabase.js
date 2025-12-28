@@ -11,7 +11,8 @@ const {
   CourseSection,
   Classroom,
   Cafeteria,
-  Wallet
+  Wallet,
+  Enrollment
 } = require('../models');
 
 /**
@@ -631,6 +632,116 @@ async function seedDatabase() {
     }
 
     console.log(`✅ Processed ${sectionCount} course sections (${createdSectionCount} created, ${skippedSectionCount} already existed)`);
+
+    // 9. Create Past Enrollments (Transcript Data)
+    console.log('📜 Creating past semesters and transcript data...');
+
+    // Fetch all seeded students for enrollment
+    const allStudents = await Student.findAll();
+
+    // Define past semesters
+    const pastSemesters = [
+      { semester: 'Fall', year: 2023 },
+      { semester: 'Spring', year: 2023 }
+    ];
+
+    let pastSectionCount = 0;
+    let pastEnrollmentCount = 0;
+
+    for (const sem of pastSemesters) {
+      console.log(`   Creating sections for ${sem.semester} ${sem.year}...`);
+
+      // Use a subset of courses for past semesters (e.g., first 20 courses) or all
+      const semCourses = courses;
+
+      for (let i = 0; i < semCourses.length; i++) {
+        const course = semCourses[i];
+
+        // 1. Find or Create Section
+        const existingSection = await CourseSection.findOne({
+          where: {
+            course_id: course.id,
+            semester: sem.semester,
+            year: sem.year,
+            section_number: '01'
+          }
+        });
+
+        let section;
+        if (!existingSection) {
+          const scheduleIndex = i % scheduleTemplates.length;
+          const classroomIndex = i % classrooms.length;
+          const facultyIndex = allFaculty.length > 0 ? i % allFaculty.length : null;
+
+          section = await CourseSection.create({
+            course_id: course.id,
+            instructor_id: facultyIndex !== null ? allFaculty[facultyIndex].id : null,
+            section_number: '01',
+            semester: sem.semester,
+            year: sem.year,
+            capacity: 50,
+            enrolled_count: 0,
+            classroom_id: classrooms[classroomIndex].id,
+            schedule_json: scheduleTemplates[scheduleIndex]
+          });
+          pastSectionCount++;
+        } else {
+          section = existingSection;
+        }
+
+        // 2. Enroll Students Randomly
+        for (const student of allStudents) {
+          // Determine if student should mock-take this course
+          // Simple logic: if course department matches student department, high probability (80%), else low (10%)
+          const isDeptMatch = student.department_id === course.department_id;
+          const shouldEnroll = isDeptMatch ? Math.random() < 0.8 : Math.random() < 0.1;
+
+          if (shouldEnroll) {
+            // Check if already enrolled
+            const existingEnrollment = await Enrollment.findOne({
+              where: {
+                student_id: student.id,
+                section_id: section.id
+              }
+            });
+
+            if (!existingEnrollment) {
+              // Generate random grades
+              const midterm = Math.floor(Math.random() * (100 - 40 + 1)) + 40; // 40-100
+              const final = Math.floor(Math.random() * (100 - 40 + 1)) + 40;   // 40-100
+              const average = (midterm * 0.4) + (final * 0.6);
+
+              let letterGrade = 'FF';
+              let status = 'failed';
+              if (average >= 90) { letterGrade = 'AA'; status = 'completed'; }
+              else if (average >= 85) { letterGrade = 'BA'; status = 'completed'; }
+              else if (average >= 80) { letterGrade = 'BB'; status = 'completed'; }
+              else if (average >= 75) { letterGrade = 'CB'; status = 'completed'; }
+              else if (average >= 70) { letterGrade = 'CC'; status = 'completed'; }
+              else if (average >= 60) { letterGrade = 'DC'; status = 'completed'; } // Conditional pass sometimes, but let's say passed
+              else if (average >= 50) { letterGrade = 'DD'; status = 'completed'; }
+              else if (average >= 40) { letterGrade = 'FD'; status = 'failed'; }
+              else { letterGrade = 'FF'; status = 'failed'; }
+
+              await Enrollment.create({
+                student_id: student.id,
+                section_id: section.id,
+                status: status,
+                midterm_grade: midterm,
+                final_grade: final,
+                letter_grade: letterGrade,
+                enrollment_date: new Date(sem.year, sem.semester === 'Fall' ? 8 : 1, 15) // Approx dates
+              });
+
+              // Increment enrolled count
+              await section.increment('enrolled_count');
+              pastEnrollmentCount++;
+            }
+          }
+        }
+      }
+    }
+    console.log(`✅ Created ${pastSectionCount} past sections and ${pastEnrollmentCount} transcript records`);
 
     console.log('');
     console.log('🎉 Database seeding completed successfully!');
