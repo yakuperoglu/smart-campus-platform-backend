@@ -148,7 +148,7 @@ class SchedulingService {
                 { model: Classroom, as: 'classroom' }
             ],
             order: [
-                [sequelize.literal(`CASE day_of_week 
+                [sequelize.literal(`CASE "Schedule"."day_of_week" 
           WHEN 'Monday' THEN 1 
           WHEN 'Tuesday' THEN 2 
           WHEN 'Wednesday' THEN 3 

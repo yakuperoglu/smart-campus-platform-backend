@@ -221,7 +221,8 @@ const getMyEnrollments = async (req, res, next) => {
     const enrollments = await enrollmentService.getStudentEnrollments(student.id, {
       status,
       semester,
-      year: year ? parseInt(year) : undefined
+      year: year ? parseInt(year) : undefined,
+      includeClassroom: false
     });
 
     res.status(200).json({
