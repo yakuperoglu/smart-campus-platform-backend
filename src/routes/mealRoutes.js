@@ -190,6 +190,32 @@ router.put('/menus/:id', verifyToken, adminOrStaff, mealController.updateMenu);
  */
 router.delete('/menus/:id', verifyToken, adminOrStaff, mealController.deleteMenu);
 
+/**
+ * @swagger
+ * /meals/menus/seed:
+ *   post:
+ *     summary: Seed menus for the next N days (Admin/Staff only)
+ *     tags: [Meals]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               days:
+ *                 type: integer
+ *                 default: 7
+ *                 minimum: 1
+ *                 maximum: 30
+ *     responses:
+ *       201:
+ *         description: Menus seeded successfully
+ */
+router.post('/menus/seed', verifyToken, adminOrStaff, mealController.seedMenus);
+
 // ==================== Reservation Routes ====================
 
 /**

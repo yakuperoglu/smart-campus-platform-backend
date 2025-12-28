@@ -10,6 +10,7 @@
     "db:sync:force": "node src/utils/dbSync.js --force",
     "db:sync:alter": "node src/utils/dbSync.js --alter",
     "db:seed": "node src/utils/seedDatabase.js",
+    "seed:menus": "node src/utils/seedMenus.js",
     "test": "cross-env NODE_ENV=test jest --testTimeout=10000"
   },
   "keywords": [
