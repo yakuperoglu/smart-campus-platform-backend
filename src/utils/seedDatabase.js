@@ -12,7 +12,8 @@ const {
   Classroom,
   Cafeteria,
   Wallet,
-  Enrollment
+  Enrollment,
+  MealMenu
 } = require('../models');
 
 /**
@@ -742,6 +743,100 @@ async function seedDatabase() {
       }
     }
     console.log(`✅ Created ${pastSectionCount} past sections and ${pastEnrollmentCount} transcript records`);
+
+    // 10. Create Meal Menus
+    console.log('🍽️  Creating meal menus for the week...');
+
+    // Create menus for today and next 6 days
+    let menuCount = 0;
+    const meals = [
+      { name: 'Grilled Chicken', type: 'Main Course', calories: 450 },
+      { name: 'Lentil Soup', type: 'Soup', calories: 150 },
+      { name: 'Rice Pilaf', type: 'Side', calories: 200 },
+      { name: 'Shepherd Salad', type: 'Side', calories: 100 },
+      { name: 'Baklava', type: 'Dessert', calories: 300 },
+      { name: 'Beef Stew', type: 'Main Course', calories: 500 },
+      { name: 'Tomato Soup', type: 'Soup', calories: 120 },
+      { name: 'Mashed Potatoes', type: 'Side', calories: 250 },
+      { name: 'Fruit Salad', type: 'Dessert', calories: 150 },
+      { name: 'Pasta Carbonara', type: 'Main Course', calories: 600 },
+      { name: 'Caesar Salad', type: 'Side', calories: 180 },
+      { name: 'Chocolate Pudding', type: 'Dessert', calories: 280 }
+    ];
+
+    for (const cafeteria of cafeterias) {
+      for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        date.setHours(12, 0, 0, 0); // Noon
+
+        // Lunch
+        const lunchItems = [
+          meals[i % meals.length],
+          meals[(i + 1) % meals.length],
+          meals[(i + 2) % meals.length],
+          meals[(i + 3) % meals.length]
+        ];
+
+        const lunchCheck = await MealMenu.findOne({
+          where: {
+            cafeteria_id: cafeteria.id,
+            date: date,
+            meal_type: 'Lunch'
+          }
+        });
+
+        if (!lunchCheck) {
+          await MealMenu.create({
+            cafeteria_id: cafeteria.id,
+            date: date,
+            meal_type: 'Lunch',
+            soup: lunchItems.find(m => m.type === 'Soup')?.name || 'Daily Soup',
+            main_dish: lunchItems.find(m => m.type === 'Main Course')?.name || 'Daily Special',
+            side_dish: lunchItems.find(m => m.type === 'Side')?.name || 'Rice',
+            dessert: lunchItems.find(m => m.type === 'Dessert')?.name || 'Fruit',
+            total_calories: lunchItems.reduce((acc, curr) => acc + curr.calories, 0),
+            price: 60.00
+          });
+          menuCount++;
+        }
+
+        // Dinner
+        const dinnerDate = new Date(date);
+        dinnerDate.setHours(18, 0, 0, 0); // 6 PM
+
+        const dinnerItems = [
+          meals[(i + 4) % meals.length],
+          meals[(i + 5) % meals.length],
+          meals[(i + 6) % meals.length],
+          meals[(i + 7) % meals.length]
+        ];
+
+        const dinnerCheck = await MealMenu.findOne({
+          where: {
+            cafeteria_id: cafeteria.id,
+            date: dinnerDate, // Note: Model might just use date only, but let's assume date includes day
+            meal_type: 'Dinner'
+          }
+        });
+
+        if (!dinnerCheck) {
+          await MealMenu.create({
+            cafeteria_id: cafeteria.id,
+            date: dinnerDate,
+            meal_type: 'Dinner',
+            soup: dinnerItems.find(m => m.type === 'Soup')?.name || 'Evening Soup',
+            main_dish: dinnerItems.find(m => m.type === 'Main Course')?.name || 'Chef Choice',
+            side_dish: dinnerItems.find(m => m.type === 'Side')?.name || 'Pasta',
+            dessert: dinnerItems.find(m => m.type === 'Dessert')?.name || 'Yogurt',
+            total_calories: dinnerItems.reduce((acc, curr) => acc + (curr ? curr.calories : 200), 0),
+            price: 60.00
+          });
+          menuCount++;
+        }
+      }
+    }
+    console.log(`✅ Created ${menuCount} meal menus for the week`);
 
     console.log('');
     console.log('🎉 Database seeding completed successfully!');
