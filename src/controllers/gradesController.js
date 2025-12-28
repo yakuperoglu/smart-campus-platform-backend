@@ -28,7 +28,7 @@ const downloadTranscriptPDF = async (req, res, next) => {
 
     // Set response headers for PDF download
     const filename = `transcript_${student.student_number}_${Date.now()}.pdf`;
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -94,7 +94,10 @@ const getMyGrades = async (req, res, next) => {
     if (year) options.year = parseInt(year);
 
     // Get enrollments with grades
-    const enrollments = await enrollmentService.getStudentEnrollments(student.id, options);
+    const enrollments = await enrollmentService.getStudentEnrollments(student.id, {
+      ...options,
+      includeClassroom: false
+    });
 
     // Format response
     const grades = enrollments
@@ -152,6 +155,7 @@ const getMyGrades = async (req, res, next) => {
     });
 
   } catch (error) {
+    console.error('Error in getMyGrades:', error);
     next(error);
   }
 };
@@ -237,7 +241,7 @@ const downloadStudentTranscriptPDF = async (req, res, next) => {
 
     // Set response headers for PDF download
     const filename = `transcript_${student.student_number}_${Date.now()}.pdf`;
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

@@ -655,14 +655,17 @@ const getStudentEnrollments = async (studentId, options = {}) => {
         {
           model: Course,
           as: 'course'
-        },
-        {
-          model: Classroom,
-          as: 'classroom'
         }
       ]
     }
   ];
+
+  if (options.includeClassroom !== false) {
+    include[0].include.push({
+      model: Classroom,
+      as: 'classroom'
+    });
+  }
 
   if (options.semester || options.year) {
     include[0].where = {};

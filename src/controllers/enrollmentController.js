@@ -141,8 +141,8 @@ const updateGrades = async (req, res, next) => {
     // Calculate average for response
     let average = null;
     if (enrollment.midterm_grade !== null && enrollment.final_grade !== null) {
-      average = (parseFloat(enrollment.midterm_grade) * 0.4) + 
-                (parseFloat(enrollment.final_grade) * 0.6);
+      average = (parseFloat(enrollment.midterm_grade) * 0.4) +
+        (parseFloat(enrollment.final_grade) * 0.6);
     }
 
     res.status(200).json({
@@ -221,7 +221,8 @@ const getMyEnrollments = async (req, res, next) => {
     const enrollments = await enrollmentService.getStudentEnrollments(student.id, {
       status,
       semester,
-      year: year ? parseInt(year) : undefined
+      year: year ? parseInt(year) : undefined,
+      includeClassroom: false
     });
 
     res.status(200).json({

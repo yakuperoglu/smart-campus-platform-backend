@@ -18,7 +18,7 @@ exports.getDashboardStats = async (req, res) => {
     const totalUsers = await User.count();
     const activeUsersToday = await User.count({
       where: {
-        updatedAt: { [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)) }
+        updated_at: { [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)) }
       }
     });
     const totalCourses = await Course.count();
@@ -29,7 +29,10 @@ exports.getDashboardStats = async (req, res) => {
     const attendanceRate = totalRecords > 0 ? (presentRecords / totalRecords) * 100 : 0;
 
     const mealReservationsToday = await MealReservation.count({
-      where: { date: { [Op.eq]: new Date().toISOString().split('T')[0] } }
+      where: sequelize.where(
+        sequelize.fn('DATE', sequelize.col('reservation_time')),
+        new Date().toISOString().split('T')[0]
+      )
     });
 
     const upcomingEvents = await Event.count({

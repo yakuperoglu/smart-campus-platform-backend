@@ -7,16 +7,41 @@ const { validationResult } = require('express-validator');
 const { AppError } = require('./errorHandler');
 
 /**
+ * Express-validator middleware logic
+ */
+const validateExpressValidator = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map(err => err.msg).join(', ');
+    return next(new AppError(errorMessages, 400, 'VALIDATION_ERROR'));
+  }
+  next();
+};
+
+/**
  * Universal validate function that handles both:
  * 1. Joi schema validation (when called with schema argument)
  * 2. Express-validator chain results (when used as middleware after validators)
  * 
  * @param {Object} schema - Optional Joi schema object with body, query, params keys
  */
-const validate = (schema) => {
-  // If schema is provided, it's Joi validation
-  if (schema && (schema.body || schema.query || schema.params)) {
-    return (req, res, next) => {
+const validate = (schema, res, next) => {
+  // If called as a middleware directly (req, res, next), schema is actually req
+  if (next && typeof next === 'function') {
+    return validateExpressValidator(schema, res, next);
+  }
+
+  // Otherwise, return a middleware function (factory pattern)
+  return (req, res, next) => {
+    // If schema is provided, check if it's Joi validation
+    // We strictly check for .validate function to distinguish from Express req object
+    const isJoiSchema = schema && (
+      (schema.body && typeof schema.body.validate === 'function') ||
+      (schema.query && typeof schema.query.validate === 'function') ||
+      (schema.params && typeof schema.params.validate === 'function')
+    );
+
+    if (isJoiSchema) {
       const validationOptions = {
         abortEarly: false,
         allowUnknown: true,
@@ -53,44 +78,14 @@ const validate = (schema) => {
         req.params = value;
       }
 
-      next();
-    };
-  }
-
-  // If no schema or schema is a request object, it's express-validator
-  // This means validate is used as middleware after express-validator chains
-  return (req, res, next) => {
-    // If called without schema (as middleware), req is actually the first arg
-    const actualReq = schema && schema.body !== undefined && typeof schema.body !== 'object' ? schema : req;
-    const actualRes = schema && schema.body !== undefined && typeof schema.body !== 'object' ? req : res;
-    const actualNext = schema && schema.body !== undefined && typeof schema.body !== 'object' ? res : next;
-
-    const errors = validationResult(actualReq);
-    
-    if (!errors.isEmpty()) {
-      const errorMessages = errors.array().map(err => err.msg).join(', ');
-      return actualNext(new AppError(errorMessages, 400, 'VALIDATION_ERROR'));
+      return next();
     }
-    
-    actualNext();
+
+    // Default fallback to express-validator if not Joi schema
+    // (This handles cases where validate() is called with an empty object or similar)
+    return validateExpressValidator(req, res, next);
   };
 };
 
-/**
- * Express-validator middleware
- * Use directly as middleware after express-validator check chains
- */
-const validateExpressValidator = (req, res, next) => {
-  const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
-    const errorMessages = errors.array().map(err => err.msg).join(', ');
-    return next(new AppError(errorMessages, 400, 'VALIDATION_ERROR'));
-  }
-  
-  next();
-};
-
-// Export both default (for Joi backwards compatibility) and named export
 module.exports = validate;
 module.exports.validate = validateExpressValidator;
