@@ -32,20 +32,14 @@ const Club = sequelize.define('Club', {
         allowNull: true
     },
     president_id: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-            model: 'users',
-            key: 'id'
-        }
+        type: DataTypes.STRING(255),
+        allowNull: true
+        // references removed to allow arbitrary values
     },
     advisor_id: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-            model: 'users',
-            key: 'id'
-        }
+        type: DataTypes.STRING(255),
+        allowNull: true
+        // references removed to allow arbitrary values
     },
     founded_date: {
         type: DataTypes.DATE,

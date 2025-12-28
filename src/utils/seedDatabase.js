@@ -14,7 +14,8 @@ const {
   Wallet,
   Enrollment,
   Club,
-  MealMenu
+  MealMenu,
+  Event
 } = require('../models');
 
 /**
@@ -756,7 +757,8 @@ async function seedDatabase() {
         location: 'Engineering Building Lab 204',
         max_members: 50,
         contact_email: 'robotics@smartcampus.edu',
-        social_links: { instagram: '@smartcampus_robotics', website: 'https://robotics.smartcampus.edu' }
+        social_links: { instagram: '@smartcampus_robotics', website: 'https://robotics.smartcampus.edu' },
+        image_url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Photography Society',
@@ -766,7 +768,8 @@ async function seedDatabase() {
         location: 'Arts Building Room 102',
         max_members: 40,
         contact_email: 'photo@smartcampus.edu',
-        social_links: { instagram: '@smartcampus_photo' }
+        social_links: { instagram: '@smartcampus_photo' },
+        image_url: 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Debate Club',
@@ -776,7 +779,8 @@ async function seedDatabase() {
         location: 'Main Hall Conference Room',
         max_members: 30,
         contact_email: 'debate@smartcampus.edu',
-        social_links: { twitter: '@sc_debate' }
+        social_links: { twitter: '@sc_debate' },
+        image_url: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Basketball Team',
@@ -786,7 +790,8 @@ async function seedDatabase() {
         location: 'Sports Center Court A',
         max_members: 25,
         contact_email: 'basketball@smartcampus.edu',
-        social_links: { instagram: '@sc_basketball' }
+        social_links: { instagram: '@sc_basketball' },
+        image_url: 'https://images.unsplash.com/photo-1546519638-68e109498ee2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Drama Society',
@@ -796,7 +801,8 @@ async function seedDatabase() {
         location: 'Theater Hall',
         max_members: 35,
         contact_email: 'drama@smartcampus.edu',
-        social_links: { instagram: '@sc_drama', website: 'https://drama.smartcampus.edu' }
+        social_links: { instagram: '@sc_drama', website: 'https://drama.smartcampus.edu' },
+        image_url: 'https://images.unsplash.com/photo-1503095392269-41fa97248ba4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Volunteer Corps',
@@ -806,7 +812,8 @@ async function seedDatabase() {
         location: 'Student Center Room 301',
         max_members: 100,
         contact_email: 'volunteer@smartcampus.edu',
-        social_links: { instagram: '@sc_volunteer' }
+        social_links: { instagram: '@sc_volunteer' },
+        image_url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Chess Club',
@@ -816,7 +823,8 @@ async function seedDatabase() {
         location: 'Library Study Room 3',
         max_members: 30,
         contact_email: 'chess@smartcampus.edu',
-        social_links: {}
+        social_links: {},
+        image_url: 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Music Band',
@@ -826,7 +834,8 @@ async function seedDatabase() {
         location: 'Music Studio Building B',
         max_members: 20,
         contact_email: 'music@smartcampus.edu',
-        social_links: { instagram: '@sc_band', youtube: '@SmartCampusBand' }
+        social_links: { instagram: '@sc_band', youtube: '@SmartCampusBand' },
+        image_url: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Entrepreneurship Club',
@@ -836,7 +845,8 @@ async function seedDatabase() {
         location: 'Business Faculty Room 405',
         max_members: 45,
         contact_email: 'entrepreneur@smartcampus.edu',
-        social_links: { linkedin: 'smartcampus-entrepreneurs' }
+        social_links: { linkedin: 'smartcampus-entrepreneurs' },
+        image_url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       },
       {
         name: 'Cultural Exchange Club',
@@ -846,11 +856,13 @@ async function seedDatabase() {
         location: 'International Center',
         max_members: 60,
         contact_email: 'culture@smartcampus.edu',
-        social_links: { instagram: '@sc_culture' }
+        social_links: { instagram: '@sc_culture' },
+        image_url: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
       }
     ];
 
     let clubCount = 0;
+    const createdClubs = [];
     for (const clubData of clubsData) {
       const [club, created] = await Club.findOrCreate({
         where: { name: clubData.name },
@@ -861,10 +873,122 @@ async function seedDatabase() {
           is_active: true
         }
       });
-      if (created) clubCount++;
+      if (created) {
+        clubCount++;
+        createdClubs.push(club);
+      } else {
+        // If exists, push it anyway so we can use it for events
+        createdClubs.push(club);
+      }
     }
     console.log(`✅ Created ${clubCount} student clubs`);
-    // 10. Create Meal Menus
+
+    // 11. Seed Events
+    console.log('📅 Creating campus events...');
+    const eventTypes = ['Social', 'Academic', 'Career', 'Sports', 'Cultural'];
+
+    // Get organizer ID (admin or first club president)
+    const organizer = await User.findOne({ where: { role: 'admin' } });
+
+    const eventsData = [
+      {
+        title: 'Spring Music Festival',
+        description: 'Join us for the biggest musical event of the year! Live performances, food stalls, and great vibes.',
+        location: 'Campus Green Area',
+        category: 'Social',
+        is_paid: true,
+        price: 50.00,
+        image_url: 'https://images.unsplash.com/photo-1533174072545-e8d4aa97d893?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'AI & Future of Work Seminar',
+        description: 'Industry experts discuss how Artificial Intelligence is reshaping the job market.',
+        location: 'Main Auditorium',
+        category: 'Academic',
+        is_paid: false,
+        price: 0.00,
+        image_url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'Inter-University Basketball Finals',
+        description: 'Cheer for our team as they compete in the championship finals!',
+        location: 'Sports Center',
+        category: 'Sports',
+        is_paid: true,
+        price: 20.00,
+        image_url: 'https://images.unsplash.com/photo-1546519638-68e109498ee2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'Career Fair 2024',
+        description: 'Meet recruiters from top companies and explore internship and job opportunities.',
+        location: 'Exhibition Hall',
+        category: 'Career',
+        is_paid: false,
+        price: 0.00,
+        image_url: 'https://images.unsplash.com/photo-1560439514-e960a3ef5019?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'International Food Day',
+        description: 'Taste cuisines from around the world prepared by our diverse student body.',
+        location: 'Student Center Plaza',
+        category: 'Cultural',
+        is_paid: true,
+        price: 15.00,
+        image_url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'Hackathon: Code for Good',
+        description: '24-hour hackathon to build solutions for social impact challenges.',
+        location: 'Innovation Hub',
+        category: 'Academic',
+        is_paid: false,
+        price: 0.00,
+        image_url: 'https://images.unsplash.com/photo-1504384308090-c54be3855091?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'Photography Exhibition',
+        description: 'Showcasing the best shots from our talented student photographers.',
+        location: 'Art Gallery',
+        category: 'Cultural',
+        is_paid: false,
+        price: 0.00,
+        image_url: 'https://images.unsplash.com/photo-1554048612-387768052bf4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      },
+      {
+        title: 'Morning Yoga Session',
+        description: 'Start your day with energy and mindfulness. Open to all levels.',
+        location: 'Sports Center Studio 2',
+        category: 'Sports',
+        is_paid: false,
+        price: 0.00,
+        image_url: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+      }
+    ];
+
+    let eventCount = 0;
+    for (let i = 0; i < eventsData.length; i++) {
+      const eventInfo = eventsData[i];
+      const date = new Date();
+      date.setDate(date.getDate() + (i * 2) + 1); // Spread events over next few weeks
+      date.setHours(14, 0, 0, 0);
+
+      // Find existing event
+      const existingEvent = await Event.findOne({ where: { title: eventInfo.title } });
+
+      if (!existingEvent && organizer) {
+        await Event.create({
+          ...eventInfo,
+          date: date,
+          organizer_id: organizer.id,
+          capacity: 100 + (i * 20),
+          registered_count: Math.floor(Math.random() * 50)
+        });
+        eventCount++;
+      }
+    }
+    console.log(`✅ Created ${eventCount} campus events`);
+
+    // 12. Create Meal Menus
     console.log('🍽️  Creating meal menus for the week...');
 
     // Create menus for today and next 6 days

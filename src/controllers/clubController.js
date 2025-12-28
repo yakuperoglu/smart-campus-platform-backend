@@ -30,18 +30,18 @@ const getAllClubs = async (req, res, next) => {
 
         const clubs = await Club.findAll({
             where,
-            include: [
-                {
-                    model: User,
-                    as: 'president',
-                    attributes: ['id', 'email', 'first_name', 'last_name']
-                },
-                {
-                    model: User,
-                    as: 'advisor',
-                    attributes: ['id', 'email', 'first_name', 'last_name']
-                }
-            ],
+            // include: [
+            //     {
+            //         model: User,
+            //         as: 'president',
+            //         attributes: ['id', 'email', 'first_name', 'last_name']
+            //     },
+            //     {
+            //         model: User,
+            //         as: 'advisor',
+            //         attributes: ['id', 'email', 'first_name', 'last_name']
+            //     }
+            // ],
             order: [['name', 'ASC']]
         });
 
@@ -65,16 +65,16 @@ const getClubById = async (req, res, next) => {
 
         const club = await Club.findByPk(id, {
             include: [
-                {
-                    model: User,
-                    as: 'president',
-                    attributes: ['id', 'email', 'first_name', 'last_name']
-                },
-                {
-                    model: User,
-                    as: 'advisor',
-                    attributes: ['id', 'email', 'first_name', 'last_name']
-                },
+                // {
+                //     model: User,
+                //     as: 'president',
+                //     attributes: ['id', 'email', 'first_name', 'last_name']
+                // },
+                // {
+                //     model: User,
+                //     as: 'advisor',
+                //     attributes: ['id', 'email', 'first_name', 'last_name']
+                // },
                 {
                     model: ClubMembership,
                     as: 'memberships',
