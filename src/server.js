@@ -11,7 +11,7 @@ const { initSocket } = require('./socket');
 
 const server = http.createServer(app);
 
-const PORT = 5000;
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
     try {

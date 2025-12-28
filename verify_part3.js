@@ -9,7 +9,7 @@
 
 const axios = require('axios');
 
-const API_URL = 'http://localhost:5000/api/v1';
+const API_URL = 'http://localhost:3000/api/v1';
 
 // Test Data (Randomized to ensure fresh run)
 const randomId = Math.floor(Math.random() * 1000);
