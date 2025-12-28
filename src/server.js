@@ -19,8 +19,8 @@ const startServer = async () => {
         await sequelize.authenticate();
         console.log('✅ Database connection established successfully.');
 
-        // Auto-initialize database if enabled
-        if (process.env.AUTO_INIT_DB === 'true') {
+        // Auto-initialize database (always enabled - uses safe findOrCreate for users)
+        if (process.env.AUTO_INIT_DB !== 'false') {
             console.log('🔄 Checking database initialization status...');
 
             try {
@@ -43,8 +43,20 @@ const startServer = async () => {
                     await syncDatabase({ force: false, alter: false });
 
                     console.log('✅ Database schema sync completed.');
+
+                    // Run seeder to create demo users
+                    console.log('🌱 Seeding database with demo data...');
+                    const seedDatabase = require('./utils/seedDatabase');
+                    await seedDatabase();
+                    console.log('✅ Database seeding completed.');
                 } else {
                     console.log(`✅ Database already initialized (${tableCount}/5 core tables found).`);
+
+                    // Always run seeder to ensure demo users exist
+                    console.log('🌱 Ensuring demo users exist...');
+                    const seedDatabase = require('./utils/seedDatabase');
+                    await seedDatabase();
+                    console.log('✅ Demo users verified.');
                 }
             } catch (initError) {
                 console.error('⚠️  Database initialization error:', initError.message);
