@@ -4,7 +4,7 @@
  * Handles fetching and managing user notifications.
  */
 
-const { Notification } = require('../models');
+const { Notification, NotificationPreference } = require('../models');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -87,8 +87,100 @@ const markAllAsRead = async (req, res, next) => {
     }
 };
 
+/**
+ * Delete a notification
+ * DELETE /api/v1/notifications/:id
+ */
+const deleteNotification = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const notificationId = req.params.id;
+
+        const notification = await Notification.findOne({
+            where: { id: notificationId, user_id: userId }
+        });
+
+        if (!notification) {
+            return next(new AppError('Notification not found', 404, 'NOT_FOUND'));
+        }
+
+        await notification.destroy();
+
+        res.status(200).json({
+            success: true,
+            message: 'Notification deleted'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Get notification preferences
+ * GET /api/v1/notifications/preferences
+ */
+const getPreferences = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        let prefs = await NotificationPreference.findOne({
+            where: { user_id: userId }
+        });
+
+        if (!prefs) {
+            // Create default preferences if not exist
+            prefs = await NotificationPreference.create({
+                user_id: userId
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: prefs.preferences
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Update notification preferences
+ * PUT /api/v1/notifications/preferences
+ */
+const updatePreferences = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const newPreferences = req.body;
+
+        let prefs = await NotificationPreference.findOne({
+            where: { user_id: userId }
+        });
+
+        if (!prefs) {
+            prefs = await NotificationPreference.create({
+                user_id: userId,
+                preferences: newPreferences
+            });
+        } else {
+            // Merge existing with new
+            const merged = { ...prefs.preferences, ...newPreferences };
+            await prefs.update({ preferences: merged });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: prefs.preferences
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    deleteNotification,
+    getPreferences,
+    updatePreferences
 };

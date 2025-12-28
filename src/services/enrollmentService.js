@@ -5,6 +5,7 @@
  */
 
 const { Op } = require('sequelize');
+console.log('[DEBUG] Loading enrollmentService.js');
 const {
   sequelize,
   Enrollment,
@@ -73,6 +74,7 @@ const hasPassedCourse = (letterGrade) => {
  * @returns {Object} - { passed: boolean, missingPrerequisites: Array }
  */
 const checkPrerequisitesRecursive = async (courseId, studentId, checkedCourses = new Set()) => {
+  console.log(`[DEBUG] checkPrerequisitesRecursive: checking course ${courseId} for student ${studentId}`);
   // Prevent infinite loops in case of circular dependencies
   if (checkedCourses.has(courseId)) {
     return { passed: true, missingPrerequisites: [] };
@@ -192,6 +194,7 @@ const normalizeSchedule = (scheduleJson) => {
  * @returns {Object} - { hasConflict: boolean, conflicts: Array }
  */
 const checkScheduleConflicts = async (studentId, newSectionId) => {
+  console.log(`[DEBUG] checkScheduleConflicts: student ${studentId}, section ${newSectionId}`);
   // Get the new section's schedule
   const newSection = await CourseSection.findByPk(newSectionId, {
     include: [
@@ -290,12 +293,15 @@ const checkScheduleConflicts = async (studentId, newSectionId) => {
  * @returns {Object} - The created enrollment
  */
 const enrollStudent = async (studentId, sectionId) => {
+  console.log(`[DEBUG] enrollStudent: student ${studentId}, section ${sectionId}`);
   // Start a transaction for atomic operations
   const transaction = await sequelize.transaction();
+  console.log('[DEBUG] transaction started');
 
   try {
     // 1. Verify student exists
     const student = await Student.findByPk(studentId, { transaction });
+    console.log('[DEBUG] student check complete');
     if (!student) {
       throw new AppError('Student not found', 404, 'STUDENT_NOT_FOUND');
     }
@@ -311,6 +317,7 @@ const enrollStudent = async (studentId, sectionId) => {
       ],
       transaction
     });
+    console.log('[DEBUG] section check complete');
 
     if (!section) {
       throw new AppError('Section not found', 404, 'SECTION_NOT_FOUND');

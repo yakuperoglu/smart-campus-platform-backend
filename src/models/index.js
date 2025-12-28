@@ -23,6 +23,7 @@ const Cafeteria = require('./Cafeteria');
 const MealMenu = require('./MealMenu');
 const Wallet = require('./Wallet');
 const Transaction = require('./Transaction');
+const NotificationPreference = require('./NotificationPreference');
 const MealReservation = require('./MealReservation');
 const Event = require('./Event');
 const EventRegistration = require('./EventRegistration');
@@ -117,6 +118,17 @@ User.hasMany(Notification, {
   onDelete: 'CASCADE'
 });
 Notification.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+// User -> NotificationPreference (One-to-One)
+User.hasOne(NotificationPreference, {
+  foreignKey: 'user_id',
+  as: 'notificationSettings',
+  onDelete: 'CASCADE'
+});
+NotificationPreference.belongsTo(User, {
   foreignKey: 'user_id',
   as: 'user'
 });
@@ -565,6 +577,7 @@ module.exports = {
 
   // Extras
   Notification,
+  NotificationPreference,
   IoTSensor,
   SensorData,
 

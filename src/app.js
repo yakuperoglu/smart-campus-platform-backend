@@ -9,6 +9,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 
@@ -39,6 +40,26 @@ app.use(cors({
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
+
+// Rate Limiting (Global)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many requests from this IP, please try again after 15 minutes'
+    }
+  }
+});
+
+// Apply to all requests except in test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.use(limiter);
+}
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));

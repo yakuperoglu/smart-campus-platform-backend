@@ -5,8 +5,9 @@
  * Centralizes notification logic.
  */
 
-const { sequelize, Notification, User } = require('../models');
+const { sequelize, Notification, User, NotificationPreference } = require('../models');
 const EmailService = require('../utils/emailService');
+const { getIo } = require('../socket');
 
 class NotificationService {
     /**
@@ -41,11 +42,38 @@ class NotificationService {
                 is_read: false
             });
 
-            // 2. Send Email (Fire and forget, don't block)
-            if (sendEmail) {
+            // 2. Fetch User Preferences
+            let prefs = await NotificationPreference.findOne({ where: { user_id: userId } });
+            // Default: All channels enabled if no prefs found (or customize as needed)
+            const preferences = prefs ? prefs.preferences : { email: true, push: true, sms: true };
+
+            // 3. Send via Channels based on Preferences
+
+            // Channel: Email
+            if (sendEmail && (preferences.email !== false)) { // Default true
                 this._sendEmailNotification(userId, title, message, actionUrl).catch(err => {
                     console.error(`[NotificationService] Failed to send email to user ${userId}:`, err);
                 });
+            }
+
+            // Channel: Push (WebSocket)
+            if (preferences.push !== false) { // Default true
+                try {
+                    const io = getIo();
+                    // Emit to specific user room: "user:{userId}"
+                    io.to(`user:${userId}`).emit('notification:new', {
+                        id: notification.id,
+                        title: notification.title,
+                        message: notification.message,
+                        type: notification.type,
+                        priority: notification.priority,
+                        action_url: notification.action_url,
+                        created_at: notification.created_at
+                    });
+                    console.log(`[NotificationService] Emitted WebSocket event to user:${userId}`);
+                } catch (socketErr) {
+                    console.error('[NotificationService] WebSocket emit failed (socket might not be init):', socketErr.message);
+                }
             }
 
             return notification;

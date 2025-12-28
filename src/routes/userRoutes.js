@@ -13,7 +13,9 @@ const {
   deleteProfilePicture,
   getAllUsers,
   getUserById,
-  changePassword
+  changePassword,
+  updateUser,
+  deleteUser
 } = require('../controllers/userController');
 
 const { verifyToken } = require('../middleware/authMiddleware');
@@ -214,5 +216,41 @@ router.get('/', verifyToken, adminOnly, validate(getUsersQuerySchema), getAllUse
  *         $ref: '#/components/responses/NotFound'
  */
 router.get('/:id', verifyToken, adminOnly, validate(userIdParamSchema), getUserById);
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   put:
+ *     summary: Update user details (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: User updated
+ */
+router.put('/:id', verifyToken, adminOnly, updateUser);
+
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: Delete user (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: User deleted
+ */
+router.delete('/:id', verifyToken, adminOnly, deleteUser);
 
 module.exports = router;

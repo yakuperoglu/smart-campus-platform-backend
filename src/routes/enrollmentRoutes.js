@@ -9,7 +9,7 @@ const router = express.Router();
 const enrollmentController = require('../controllers/enrollmentController');
 const { verifyToken, loadUserProfile } = require('../middleware/authMiddleware');
 const { authorize, studentOnly, facultyOrAdmin } = require('../middleware/roleMiddleware');
-const { validate } = require('../middleware/validate');
+const validate = require('../middleware/validate');
 const {
   createEnrollmentValidator,
   enrollmentIdValidator,

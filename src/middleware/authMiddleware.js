@@ -129,8 +129,18 @@ const loadUserProfile = async (req, res, next) => {
   }
 };
 
+// Middleware to check if user is admin
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    next(new AppError('Not authorized as an admin', 403, 'FORBIDDEN'));
+  }
+};
+
 module.exports = {
   verifyToken,
   optionalAuth,
-  loadUserProfile
+  loadUserProfile,
+  isAdmin
 };

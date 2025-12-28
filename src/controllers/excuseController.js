@@ -22,7 +22,7 @@ exports.createExcuseRequest = async (req, res, next) => {
     try {
         const { session_id, reason } = req.body;
         const documentUrl = req.file ? `/uploads/documents/${req.file.filename}` : null;
-        const studentId = req.user.student?.id;
+        const studentId = req.user.studentProfile?.id;
 
         if (!studentId) {
             return next(new AppError('Only students can create excuse requests', 403, 'NOT_STUDENT'));
@@ -62,6 +62,17 @@ exports.createExcuseRequest = async (req, res, next) => {
             status: 'pending'
         });
 
+        // Emit to Admin
+        try {
+            const io = require('../socket').getIo();
+            io.to('role:admin').emit('admin:new_excuse', {
+                request: excuseRequest,
+                studentId: studentId
+            });
+        } catch (err) {
+            console.error('Socket emit failed', err.message);
+        }
+
         res.status(201).json({
             success: true,
             data: {
@@ -79,7 +90,7 @@ exports.createExcuseRequest = async (req, res, next) => {
  */
 exports.getMyExcuseRequests = async (req, res, next) => {
     try {
-        const studentId = req.user.student?.id;
+        const studentId = req.user.studentProfile?.id;
         if (!studentId) {
             return next(new AppError('Only students can view their requests', 403, 'NOT_STUDENT'));
         }
@@ -125,7 +136,7 @@ exports.getMyExcuseRequests = async (req, res, next) => {
  */
 exports.getFacultyExcuseRequests = async (req, res, next) => {
     try {
-        const instructorId = req.user.faculty?.id;
+        const instructorId = req.user.facultyProfile?.id;
         if (!instructorId) {
             return next(new AppError('Only faculty can view requests', 403, 'NOT_FACULTY'));
         }
@@ -194,6 +205,62 @@ exports.getFacultyExcuseRequests = async (req, res, next) => {
 };
 
 /**
+ * Get ALL excuse requests (Admin only)
+ * @route GET /api/v1/excuses/admin/all
+ */
+exports.getAllExcuseRequests = async (req, res, next) => {
+    try {
+        const { status } = req.query;
+        const whereClause = {};
+        if (status) whereClause.status = status;
+
+        const requests = await ExcuseRequest.findAll({
+            where: whereClause,
+            include: [
+                {
+                    model: AttendanceSession,
+                    as: 'session',
+                    include: [
+                        {
+                            model: CourseSection,
+                            as: 'section',
+                            include: [
+                                {
+                                    model: Course,
+                                    as: 'course',
+                                    attributes: ['name', 'code']
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    model: Student,
+                    as: 'student',
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['first_name', 'last_name', 'email', 'profile_picture_url']
+                        }
+                    ]
+                }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                requests
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * Update excuse request status (Approve/Reject)
  * @route PUT /api/v1/excuses/:id/status
  */
@@ -201,7 +268,7 @@ exports.updateExcuseStatus = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { status, notes } = req.body;
-        const instructorId = req.user.faculty?.id;
+        const instructorId = req.user.facultyProfile?.id;
 
         if (!['approved', 'rejected'].includes(status)) {
             return next(new AppError('Invalid status. Must be approved or rejected', 400, 'INVALID_STATUS'));

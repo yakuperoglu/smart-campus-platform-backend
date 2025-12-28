@@ -446,6 +446,68 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+/**
+ * @route   PUT /api/v1/users/:id
+ * @desc    Update any user (Admin only)
+ * @access  Private/Admin
+ */
+const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return next(new AppError('User not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    // Role-specific field updates
+    if (user.role === 'student' && (updates.student_number || updates.gpa)) {
+      const student = await Student.findOne({ where: { user_id: id } });
+      if (student) await student.update(updates);
+    } else if (user.role === 'faculty' && (updates.employee_number || updates.title)) {
+      const faculty = await Faculty.findOne({ where: { user_id: id } });
+      if (faculty) await faculty.update(updates);
+    }
+
+    // General user updates
+    await user.update(updates);
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: { user }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @route   DELETE /api/v1/users/:id
+ * @desc    Delete user (Admin only)
+ * @access  Private/Admin
+ */
+const deleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return next(new AppError('User not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    await user.destroy(); // Cascading delete handled by DB relations
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 module.exports = {
   getCurrentUser,
@@ -454,5 +516,7 @@ module.exports = {
   deleteProfilePicture,
   getAllUsers,
   getUserById,
-  changePassword
+  changePassword,
+  updateUser,
+  deleteUser
 };
