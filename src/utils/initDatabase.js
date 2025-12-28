@@ -9,6 +9,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const syncDatabase = require('./dbSync');
+const seedDatabase = require('./seedDatabase');
 
 /**
  * Initialize database with sync and seed
@@ -40,8 +41,14 @@ async function initDatabase() {
       if (tableCount >= 5) {
         console.log('✅ Database is already initialized.');
         console.log(`   Found ${tableCount} core tables.`);
-        console.log('   Skipping initialization to prevent data loss.');
         console.log('');
+
+        // Still run seeder to ensure demo users exist
+        console.log('🌱 Running database seeder to ensure demo users...');
+        await seedDatabase();
+        console.log('✅ Database seeding completed.');
+        console.log('');
+
         return true;
       }
 
@@ -60,6 +67,12 @@ async function initDatabase() {
 
     console.log('');
     console.log('✅ Database schema sync completed successfully.');
+    console.log('');
+
+    // Seed database with demo data
+    console.log('🌱 Running database seeder...');
+    await seedDatabase();
+    console.log('✅ Database seeding completed.');
     console.log('');
 
     return true;
