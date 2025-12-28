@@ -45,6 +45,7 @@ router.use('/analytics', analyticsRoutes);
 
 /**
  * Health check endpoint
+ * Returns API status and timestamp
  */
 router.get('/health', (req, res) => {
   res.status(200).json({
