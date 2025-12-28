@@ -22,6 +22,7 @@ const schedulingRoutes = require('./schedulingRoutes');
 const reservationRoutes = require('./reservationRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const analyticsRoutes = require('./analyticsRoutes');
+const clubRoutes = require('./clubRoutes');
 
 /**
  * Mount all routes
@@ -42,6 +43,7 @@ router.use('/scheduling', schedulingRoutes);
 router.use('/reservations', reservationRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/clubs', clubRoutes);
 
 /**
  * Health check endpoint

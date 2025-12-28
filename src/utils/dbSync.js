@@ -12,7 +12,7 @@ async function syncDatabase(options = {}) {
 
   try {
     console.log('🔄 Starting database synchronization...');
-    
+
     // Test the connection
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
@@ -37,6 +37,9 @@ async function syncDatabase(options = {}) {
       await sequelize.query('DROP TABLE IF EXISTS "password_resets" CASCADE;');
       await sequelize.query('DROP TABLE IF EXISTS "email_verifications" CASCADE;');
       await sequelize.query('DROP TABLE IF EXISTS "wallets" CASCADE;');
+      await models.ClubMembership.sync({ force: true }); // Drop specific table
+      await sequelize.query('DROP TABLE IF EXISTS "club_memberships" CASCADE;');
+      await sequelize.query('DROP TABLE IF EXISTS "clubs" CASCADE;');
       await sequelize.query('DROP TABLE IF EXISTS "admins" CASCADE;');
       await sequelize.query('DROP TABLE IF EXISTS "faculty" CASCADE;');
       await sequelize.query('DROP TABLE IF EXISTS "students" CASCADE;');
@@ -82,6 +85,8 @@ async function syncDatabase(options = {}) {
     await models.CourseSection.sync({ force: false, alter });
     await models.MealMenu.sync({ force: false, alter });
     await models.EventRegistration.sync({ force: false, alter });
+    await models.Club.sync({ force: false, alter });
+    await models.ClubMembership.sync({ force: false, alter });
 
     // Level 4: Tables that depend on Level 3
     await models.Enrollment.sync({ force: false, alter });
@@ -91,7 +96,7 @@ async function syncDatabase(options = {}) {
     // Level 5: Tables that depend on Level 4
     await models.AttendanceRecord.sync({ force: false, alter });
     await models.ExcuseRequest.sync({ force: false, alter });
-    
+
     if (force) {
       console.log('⚠️  All tables have been dropped and recreated.');
     } else if (alter) {

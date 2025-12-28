@@ -12,7 +12,8 @@ const {
   Classroom,
   Cafeteria,
   Wallet,
-  Enrollment
+  Enrollment,
+  Club
 } = require('../models');
 
 /**
@@ -539,7 +540,7 @@ async function seedDatabase() {
         gps_long: 28.9786,
         features_json: { projector: true, smartboard: true }
       }
-    ]);
+    ], { updateOnDuplicate: ['capacity', 'features_json', 'updated_at'] });
     console.log(`✅ Created ${classrooms.length} classrooms`);
 
     // 7. Create Cafeterias
@@ -557,7 +558,7 @@ async function seedDatabase() {
         gps_lat: 41.0086,
         gps_long: 28.9788
       }
-    ]);
+    ], { updateOnDuplicate: ['name', 'location', 'gps_lat', 'gps_long', 'updated_at'] });
     console.log(`✅ Created ${cafeterias.length} cafeterias`);
 
     // 8. Create Course Sections and assign to faculty
@@ -742,6 +743,126 @@ async function seedDatabase() {
       }
     }
     console.log(`✅ Created ${pastSectionCount} past sections and ${pastEnrollmentCount} transcript records`);
+
+    // 10. Seed Clubs
+    console.log('🏛️ Creating student clubs...');
+    const clubsData = [
+      {
+        name: 'Robotics Club',
+        description: 'Build and program robots, compete in national competitions, and learn cutting-edge automation technologies.',
+        category: 'technology',
+        meeting_schedule: 'Every Tuesday 18:00',
+        location: 'Engineering Building Lab 204',
+        max_members: 50,
+        contact_email: 'robotics@smartcampus.edu',
+        social_links: { instagram: '@smartcampus_robotics', website: 'https://robotics.smartcampus.edu' }
+      },
+      {
+        name: 'Photography Society',
+        description: 'Capture beautiful moments, learn photography techniques, and organize exhibitions on campus.',
+        category: 'arts',
+        meeting_schedule: 'Every Wednesday 17:00',
+        location: 'Arts Building Room 102',
+        max_members: 40,
+        contact_email: 'photo@smartcampus.edu',
+        social_links: { instagram: '@smartcampus_photo' }
+      },
+      {
+        name: 'Debate Club',
+        description: 'Enhance your public speaking skills, participate in debates, and represent the university in competitions.',
+        category: 'academic',
+        meeting_schedule: 'Every Monday 19:00',
+        location: 'Main Hall Conference Room',
+        max_members: 30,
+        contact_email: 'debate@smartcampus.edu',
+        social_links: { twitter: '@sc_debate' }
+      },
+      {
+        name: 'Basketball Team',
+        description: 'Join our competitive basketball team, train with professional coaches, and compete in inter-university leagues.',
+        category: 'sports',
+        meeting_schedule: 'Monday, Wednesday, Friday 16:00',
+        location: 'Sports Center Court A',
+        max_members: 25,
+        contact_email: 'basketball@smartcampus.edu',
+        social_links: { instagram: '@sc_basketball' }
+      },
+      {
+        name: 'Drama Society',
+        description: 'Act, direct, and produce theatrical performances. Join us for workshops and annual plays.',
+        category: 'arts',
+        meeting_schedule: 'Every Thursday 18:30',
+        location: 'Theater Hall',
+        max_members: 35,
+        contact_email: 'drama@smartcampus.edu',
+        social_links: { instagram: '@sc_drama', website: 'https://drama.smartcampus.edu' }
+      },
+      {
+        name: 'Volunteer Corps',
+        description: 'Make a difference in the community through volunteering activities, charity events, and social projects.',
+        category: 'volunteer',
+        meeting_schedule: 'Every Saturday 10:00',
+        location: 'Student Center Room 301',
+        max_members: 100,
+        contact_email: 'volunteer@smartcampus.edu',
+        social_links: { instagram: '@sc_volunteer' }
+      },
+      {
+        name: 'Chess Club',
+        description: 'Improve your strategic thinking, play chess with fellow enthusiasts, and compete in tournaments.',
+        category: 'academic',
+        meeting_schedule: 'Every Friday 17:00',
+        location: 'Library Study Room 3',
+        max_members: 30,
+        contact_email: 'chess@smartcampus.edu',
+        social_links: {}
+      },
+      {
+        name: 'Music Band',
+        description: 'Musicians unite! Practice together, perform at campus events, and create amazing music.',
+        category: 'arts',
+        meeting_schedule: 'Tuesday, Thursday 19:00',
+        location: 'Music Studio Building B',
+        max_members: 20,
+        contact_email: 'music@smartcampus.edu',
+        social_links: { instagram: '@sc_band', youtube: '@SmartCampusBand' }
+      },
+      {
+        name: 'Entrepreneurship Club',
+        description: 'Turn your ideas into startups. Attend workshops, pitch competitions, and networking events.',
+        category: 'technology',
+        meeting_schedule: 'Every Wednesday 19:00',
+        location: 'Business Faculty Room 405',
+        max_members: 45,
+        contact_email: 'entrepreneur@smartcampus.edu',
+        social_links: { linkedin: 'smartcampus-entrepreneurs' }
+      },
+      {
+        name: 'Cultural Exchange Club',
+        description: 'Celebrate diversity! Share cultures, organize international food festivals, and build global friendships.',
+        category: 'cultural',
+        meeting_schedule: 'Every Sunday 15:00',
+        location: 'International Center',
+        max_members: 60,
+        contact_email: 'culture@smartcampus.edu',
+        social_links: { instagram: '@sc_culture' }
+      }
+    ];
+
+    let clubCount = 0;
+    for (const clubData of clubsData) {
+      const [club, created] = await Club.findOrCreate({
+        where: { name: clubData.name },
+        defaults: {
+          ...clubData,
+          founded_date: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), 1),
+          member_count: Math.floor(Math.random() * 20) + 5,
+          is_active: true
+        }
+      });
+      if (created) clubCount++;
+    }
+    console.log(`✅ Created ${clubCount} student clubs`);
 
     console.log('');
     console.log('🎉 Database seeding completed successfully!');

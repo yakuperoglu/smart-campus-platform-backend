@@ -40,6 +40,10 @@ const ClassroomReservation = require('./ClassroomReservation');
 const EventSurvey = require('./EventSurvey');
 const SurveyResponse = require('./SurveyResponse');
 
+// Clubs
+const Club = require('./Club');
+const ClubMembership = require('./ClubMembership');
+
 // ============================================
 // DEFINE ALL ASSOCIATIONS (RELATIONSHIPS)
 // ============================================
@@ -538,6 +542,51 @@ EventRegistration.belongsTo(Transaction, {
   as: 'paymentTransaction'
 });
 
+// -------------------- Club Relations --------------------
+// Club -> ClubMembership (One-to-Many)
+Club.hasMany(ClubMembership, {
+  foreignKey: 'club_id',
+  as: 'memberships',
+  onDelete: 'CASCADE'
+});
+ClubMembership.belongsTo(Club, {
+  foreignKey: 'club_id',
+  as: 'club'
+});
+
+// User -> ClubMembership (One-to-Many)
+User.hasMany(ClubMembership, {
+  foreignKey: 'user_id',
+  as: 'clubMemberships',
+  onDelete: 'CASCADE'
+});
+ClubMembership.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+// User -> Club (One-to-Many) - as president
+User.hasMany(Club, {
+  foreignKey: 'president_id',
+  as: 'presidentOfClubs',
+  onDelete: 'SET NULL'
+});
+Club.belongsTo(User, {
+  foreignKey: 'president_id',
+  as: 'president'
+});
+
+// User -> Club (One-to-Many) - as advisor
+User.hasMany(Club, {
+  foreignKey: 'advisor_id',
+  as: 'advisorOfClubs',
+  onDelete: 'SET NULL'
+});
+Club.belongsTo(User, {
+  foreignKey: 'advisor_id',
+  as: 'advisor'
+});
+
 // ============================================
 // EXPORT ALL MODELS AND SEQUELIZE INSTANCE
 // ============================================
@@ -587,5 +636,9 @@ module.exports = {
 
   // Part 3: Event Surveys
   EventSurvey,
-  SurveyResponse
+  SurveyResponse,
+
+  // Clubs
+  Club,
+  ClubMembership
 };
