@@ -902,7 +902,7 @@ async function seedDatabase() {
           where: {
             cafeteria_id: cafeteria.id,
             date: date,
-            meal_type: 'Lunch'
+            type: 'lunch'
           }
         });
 
@@ -910,7 +910,7 @@ async function seedDatabase() {
           await MealMenu.create({
             cafeteria_id: cafeteria.id,
             date: date,
-            meal_type: 'Lunch',
+            type: 'lunch',
             soup: lunchItems.find(m => m.type === 'Soup')?.name || 'Daily Soup',
             main_dish: lunchItems.find(m => m.type === 'Main Course')?.name || 'Daily Special',
             side_dish: lunchItems.find(m => m.type === 'Side')?.name || 'Rice',
@@ -936,7 +936,7 @@ async function seedDatabase() {
           where: {
             cafeteria_id: cafeteria.id,
             date: dinnerDate, // Note: Model might just use date only, but let's assume date includes day
-            meal_type: 'Dinner'
+            type: 'dinner'
           }
         });
 
@@ -944,7 +944,7 @@ async function seedDatabase() {
           await MealMenu.create({
             cafeteria_id: cafeteria.id,
             date: dinnerDate,
-            meal_type: 'Dinner',
+            type: 'dinner',
             soup: dinnerItems.find(m => m.type === 'Soup')?.name || 'Evening Soup',
             main_dish: dinnerItems.find(m => m.type === 'Main Course')?.name || 'Chef Choice',
             side_dish: dinnerItems.find(m => m.type === 'Side')?.name || 'Pasta',

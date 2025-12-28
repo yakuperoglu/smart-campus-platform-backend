@@ -47,7 +47,7 @@ const getAllClubs = async (req, res, next) => {
 
         res.json({
             success: true,
-            data: { clubs }
+            data: clubs
         });
     } catch (error) {
         next(error);
