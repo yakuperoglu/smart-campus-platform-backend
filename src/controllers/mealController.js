@@ -240,6 +240,31 @@ const getCafeterias = async (req, res, next) => {
     }
 };
 
+/**
+ * Seed menus for the next N days (Admin/Staff only)
+ * POST /api/meals/menus/seed
+ */
+const seedMenus = async (req, res, next) => {
+    try {
+        const { days = 7 } = req.body;
+        const daysNum = parseInt(days);
+
+        if (isNaN(daysNum) || daysNum < 1 || daysNum > 30) {
+            return next(new AppError('Days must be between 1 and 30', 400, 'INVALID_DAYS'));
+        }
+
+        const result = await MealService.seedMenus(daysNum);
+
+        res.status(201).json({
+            success: true,
+            message: `Menu seeding completed`,
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     createReservation,
     useReservation,
@@ -250,5 +275,6 @@ module.exports = {
     createMenu,
     updateMenu,
     deleteMenu,
-    getCafeterias
+    getCafeterias,
+    seedMenus
 };
