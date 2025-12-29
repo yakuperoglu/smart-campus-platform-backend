@@ -191,6 +191,20 @@ router.delete('/schedule', verifyToken, adminOnly, schedulingController.clearSch
 
 /**
  * @swagger
+ * /scheduling/my-schedule:
+ *   get:
+ *     summary: Get my schedule
+ *     tags: [Scheduling]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: My schedule data
+ */
+router.get('/my-schedule', verifyToken, schedulingController.getMySchedule);
+
+/**
+ * @swagger
  * /scheduling/my-schedule/ical:
  *   get:
  *     summary: Export my schedule to iCal (.ics)

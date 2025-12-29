@@ -17,7 +17,8 @@ const { AppError } = require('../middleware/errorHandler');
  */
 const register = async (req, res, next) => {
   const transaction = await sequelize.transaction();
-  
+  let isCommitted = false;
+
   try {
     const { email, password, role, student_number, employee_number, title, department_id } = req.body;
 
@@ -102,6 +103,7 @@ const register = async (req, res, next) => {
 
     // Commit transaction
     await transaction.commit();
+    isCommitted = true;
 
     // Send verification email (async, don't wait)
     sendVerificationEmail(email, verificationToken).catch(err => {
@@ -122,7 +124,9 @@ const register = async (req, res, next) => {
     });
 
   } catch (error) {
-    await transaction.rollback();
+    if (!isCommitted) {
+      await transaction.rollback();
+    }
     next(error);
   }
 };

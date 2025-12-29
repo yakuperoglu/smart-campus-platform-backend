@@ -201,6 +201,64 @@ class SchedulingService {
     }
 
     /**
+     * Get user's schedule (student)
+     * @param {string} userId - User ID
+     * @returns {Promise<Array>} List of schedule items
+     */
+    static async getStudentSchedule(userId) {
+        const user = await sequelize.models.User.findByPk(userId);
+        if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+
+        // Find student enrollment to get sections
+        const enrollments = await Enrollment.findAll({
+            where: {
+                student_id: userId,
+                status: 'enrolled'
+            },
+            include: [{
+                model: CourseSection,
+                as: 'section',
+                include: [
+                    { model: Course, as: 'course' },
+                    { model: Schedule, as: 'schedules', include: [{ model: Classroom, as: 'classroom' }] },
+                    { model: Faculty, as: 'instructor', include: [{ model: sequelize.models.User, as: 'user' }] }
+                ]
+            }]
+        });
+
+        const schedules = [];
+
+        for (const enrollment of enrollments) {
+            const section = enrollment.section;
+            if (!section || !section.schedules || section.schedules.length === 0) continue;
+
+            for (const schedule of section.schedules) {
+                schedules.push({
+                    id: schedule.id,
+                    day: schedule.day_of_week,
+                    start_time: schedule.start_time,
+                    end_time: schedule.end_time,
+                    section: {
+                        id: section.id,
+                        course_code: section.course?.code,
+                        course_name: section.course?.name,
+                        section_number: section.section_number,
+                        instructor: section.instructor?.user ?
+                            `${section.instructor.user.first_name} ${section.instructor.user.last_name}` : 'TBA'
+                    },
+                    classroom: {
+                        id: schedule.classroom.id,
+                        building: schedule.classroom.building,
+                        room_number: schedule.classroom.room_number
+                    }
+                });
+            }
+        }
+
+        return schedules;
+    }
+
+    /**
      * Export user's schedule to iCal format
      * @param {string} userId - User ID
      * @returns {Promise<string>} iCal string
@@ -309,7 +367,7 @@ class SchedulingService {
 
     static async _fetchClassrooms() {
         return Classroom.findAll({
-            where: { is_active: true },
+            // where: { is_active: true },
             order: [['capacity', 'DESC']]
         });
     }

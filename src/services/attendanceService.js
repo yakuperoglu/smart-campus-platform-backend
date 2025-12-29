@@ -765,6 +765,16 @@ const getStudentAttendanceHistory = async (studentId, options = {}) => {
   return records.map(r => ({
     id: r.id,
     session_date: r.session.start_time,
+    session: {
+      id: r.session.id,
+      start_time: r.session.start_time,
+      section: {
+        course: {
+          code: r.session.section.course.code,
+          name: r.session.section.course.name
+        }
+      }
+    },
     course: {
       code: r.session.section.course.code,
       name: r.session.section.course.name

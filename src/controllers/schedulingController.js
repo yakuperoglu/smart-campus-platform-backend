@@ -120,7 +120,7 @@ const getSchedulingInfo = async (req, res, next) => {
         });
 
         // Get classroom count
-        const classroomCount = await Classroom.count({ where: { is_active: true } });
+        const classroomCount = await Classroom.count();
 
         // Get time slots and days
         const timeSlots = [
@@ -154,6 +154,24 @@ const getSchedulingInfo = async (req, res, next) => {
 };
 
 /**
+ * Get my schedule (student)
+ * GET /api/scheduling/my-schedule
+ */
+const getMySchedule = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const schedule = await SchedulingService.getStudentSchedule(userId);
+
+        res.status(200).json({
+            success: true,
+            data: schedule
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * Export schedule to iCal
  * GET /api/scheduling/my-schedule/ical
  */
@@ -178,5 +196,6 @@ module.exports = {
     getSchedule,
     clearSchedule,
     getSchedulingInfo,
-    exportScheduleToIcal
+    exportScheduleToIcal,
+    getMySchedule
 };

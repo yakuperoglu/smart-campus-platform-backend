@@ -24,7 +24,7 @@ const Classroom = sequelize.define('Classroom', {
       min: 1
     }
   },
-  gps_lat: {
+  /* gps_lat: {
     type: DataTypes.FLOAT,
     allowNull: true,
     validate: {
@@ -39,7 +39,7 @@ const Classroom = sequelize.define('Classroom', {
       min: -180,
       max: 180
     }
-  },
+  }, */
   features_json: {
     type: DataTypes.JSONB,
     allowNull: true,
