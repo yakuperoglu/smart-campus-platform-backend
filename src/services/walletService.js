@@ -233,17 +233,22 @@ class WalletService {
         });
 
         return {
-            transactions: rows.map(tx => ({
-                id: tx.id,
-                type: tx.type,
-                amount: parseFloat(tx.amount),
-                description: tx.description,
-                status: tx.status,
-                reference_id: tx.reference_id,
-                reference_type: tx.reference_type,
-                transaction_date: tx.transaction_date,
-                created_at: tx.created_at
-            })),
+            transactions: rows.map(tx => {
+                const isCredit = ['deposit', 'refund'].includes(tx.type);
+                const signedAmount = parseFloat(tx.amount) * (isCredit ? 1 : -1);
+
+                return {
+                    id: tx.id,
+                    type: tx.type,
+                    amount: signedAmount,
+                    description: tx.description,
+                    status: tx.status,
+                    reference_id: tx.reference_id,
+                    reference_type: tx.reference_type,
+                    transaction_date: tx.transaction_date,
+                    created_at: tx.created_at
+                };
+            }),
             pagination: {
                 page,
                 limit,

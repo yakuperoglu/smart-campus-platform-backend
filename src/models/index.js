@@ -566,7 +566,7 @@ ClubMembership.belongsTo(User, {
 });
 
 // User -> Club (One-to-Many) - as president
-/*
+// User -> Club (One-to-Many) - as president
 User.hasMany(Club, {
   foreignKey: 'president_id',
   as: 'presidentOfClubs',
@@ -587,7 +587,6 @@ Club.belongsTo(User, {
   foreignKey: 'advisor_id',
   as: 'advisor'
 });
-*/
 
 // ============================================
 // EXPORT ALL MODELS AND SEQUELIZE INSTANCE
