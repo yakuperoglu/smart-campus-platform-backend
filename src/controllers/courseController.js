@@ -583,9 +583,53 @@ const deleteSection = async (req, res, next) => {
     }
 };
 
+const getFacultySections = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+
+        // Find faculty profile
+        const faculty = await Faculty.findOne({ where: { user_id: userId } });
+        if (!faculty) {
+            return next(new AppError('Faculty profile not found', 404, 'FACULTY_NOT_FOUND'));
+        }
+
+        // Find sections taught by this faculty
+        const sections = await CourseSection.findAll({
+            where: { instructor_id: faculty.id },
+            include: [
+                {
+                    model: Course,
+                    as: 'course',
+                    attributes: ['id', 'code', 'name', 'credits', 'ects']
+                },
+                {
+                    model: Classroom,
+                    as: 'classroom',
+                    attributes: ['id', 'building', 'room_number']
+                }
+            ],
+            order: [
+                ['year', 'DESC'],
+                ['semester', 'DESC'],
+                ['course', 'code', 'ASC'],
+                ['section_number', 'ASC']
+            ]
+        });
+
+        res.status(200).json({
+            success: true,
+            count: sections.length,
+            data: sections
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getCourses,
     getCourseById,
+    getFacultySections,
     createCourse,
     updateCourse,
     deleteCourse,
