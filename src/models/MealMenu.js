@@ -44,7 +44,7 @@ const MealMenu = sequelize.define('MealMenu', {
   is_published: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
-    defaultValue: false,
+    defaultValue: true,
     comment: 'Whether this menu is visible to users'
   },
   max_reservations: {
